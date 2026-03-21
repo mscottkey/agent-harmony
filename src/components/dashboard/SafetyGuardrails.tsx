@@ -1,0 +1,63 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+
+interface Guardrail {
+  id: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+  type: "rollback" | "escalation";
+}
+
+const INITIAL: Guardrail[] = [
+  { id: "auto-rollback", label: "Autonomous Rollback", description: "Automatically revert agent decisions when drift exceeds threshold", enabled: true, type: "rollback" },
+  { id: "hitl", label: "Human-in-the-Loop Gate", description: "Require human approval for cross-platform handoffs", enabled: false, type: "escalation" },
+  { id: "context-check", label: "Context Integrity Check", description: "Validate MCP payload completeness before handoff", enabled: true, type: "rollback" },
+  { id: "escalation-path", label: "Escalation Path Override", description: "Route critical drift events to senior ops team", enabled: false, type: "escalation" },
+];
+
+export default function SafetyGuardrails() {
+  const [guardrails, setGuardrails] = useState(INITIAL);
+
+  const toggle = (id: string) => {
+    setGuardrails((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, enabled: !g.enabled } : g))
+    );
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold">Safety Guardrails</CardTitle>
+          <Badge variant="outline" className="text-[10px] bg-drift-success/10 text-drift-success border-drift-success/30">
+            {guardrails.filter((g) => g.enabled).length} Active
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {guardrails.map((g) => (
+          <div
+            key={g.id}
+            className={`flex items-start justify-between gap-3 rounded-lg border p-3 transition-all ${
+              g.enabled ? "border-primary/20 bg-primary/5" : "border-border bg-card"
+            }`}
+          >
+            <div className="space-y-0.5 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{g.label}</span>
+                <Badge variant="outline" className="text-[9px] border-border">
+                  {g.type === "rollback" ? "🔄 Rollback" : "🧑 HITL"}
+                </Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">{g.description}</p>
+            </div>
+            <Switch checked={g.enabled} onCheckedChange={() => toggle(g.id)} />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
