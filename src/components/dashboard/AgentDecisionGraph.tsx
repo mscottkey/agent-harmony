@@ -14,6 +14,9 @@ interface GraphNode {
   children: string[];
   detail: string;
   throughput?: number;
+  driftScore: number;
+  intent: string;
+  action: string;
 }
 
 const INITIAL_NODES: GraphNode[] = [
