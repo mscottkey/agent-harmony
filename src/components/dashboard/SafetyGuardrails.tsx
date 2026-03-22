@@ -36,7 +36,7 @@ interface SafetyGuardrailsProps {
   onIntentLockChange?: (enabled: boolean) => void;
 }
 
-export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChange, onPiiRedactionChange }: SafetyGuardrailsProps) {
+export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChange, onPiiRedactionChange, onIntentLockChange }: SafetyGuardrailsProps) {
   const [guardrails, setGuardrails] = useState(INITIAL);
 
   const toggle = (id: string) => {
