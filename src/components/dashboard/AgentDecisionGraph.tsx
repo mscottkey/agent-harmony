@@ -177,7 +177,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
   }, []);
 
   return (
-    <Card className="col-span-2 row-span-2">
+    <Card className="lg:col-span-2 lg:row-span-2">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
