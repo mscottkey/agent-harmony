@@ -8,7 +8,7 @@ interface Guardrail {
   label: string;
   description: string;
   enabled: boolean;
-  type: "rollback" | "escalation" | "verification" | "privacy";
+  type: "rollback" | "escalation" | "verification" | "privacy" | "intent";
 }
 
 const INITIAL: Guardrail[] = [
