@@ -110,3 +110,12 @@
 .vibe-glow {
   animation: vibeGlow 1.5s ease-in-out infinite;
 }
+
+@keyframes killPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.kill-pulse {
+  animation: killPulse 1s ease-in-out infinite;
+}
