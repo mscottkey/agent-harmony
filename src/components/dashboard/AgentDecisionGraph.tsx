@@ -92,7 +92,7 @@ const PENDING_PAYLOAD = `{
   "routing": "senior_ops"
 }`;
 
-export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanticGateEnabled = false, onEscalationClick, intentLayerVisible = false }: AgentDecisionGraphProps) {
+export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanticGateEnabled = false, onEscalationClick, intentLayerVisible = false, missionPoliciesActive = false }: AgentDecisionGraphProps) {
   const { alertCriticalDrift } = useDriftNotifications();
   const [nodes, setNodes] = useState(INITIAL_NODES);
   const [selected, setSelected] = useState<GraphNode | null>(null);
