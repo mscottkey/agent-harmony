@@ -20,13 +20,13 @@ interface GraphNode {
 }
 
 const INITIAL_NODES: GraphNode[] = [
-  { id: "1", label: "Inbound Lead", agent: "Salesforce", status: "success", x: 400, y: 40, children: ["2", "3"], detail: "Lead scored at 87/100", throughput: 142 },
-  { id: "2", label: "Qualify & Route", agent: "Salesforce", status: "success", x: 220, y: 140, children: ["4"], detail: "Enterprise tier detected", throughput: 98 },
-  { id: "3", label: "Churn Risk Check", agent: "ChurnZero", status: "warning", x: 580, y: 140, children: ["5"], detail: "Risk score elevated: 0.72", throughput: 44 },
-  { id: "4", label: "MCP Handoff → Zendesk", agent: "MCP Bridge", status: "success", x: 220, y: 240, children: ["6"], detail: "Context payload: 2.1KB", throughput: 91 },
-  { id: "5", label: "Retention Trigger", agent: "ChurnZero", status: "critical", x: 580, y: 240, children: ["7"], detail: "DRIFT: Reasoning misaligned", throughput: 12 },
-  { id: "6", label: "Ticket Created", agent: "Zendesk", status: "success", x: 140, y: 340, children: [], detail: "Ticket #ZD-4892 created", throughput: 87 },
-  { id: "7", label: "Escalation Failed", agent: "ChurnZero", status: "critical", x: 580, y: 340, children: [], detail: "Missing customer context", throughput: 3 },
+  { id: "1", label: "Inbound Lead", agent: "Salesforce", status: "success", x: 400, y: 40, children: ["2", "3"], detail: "Lead scored at 87/100", throughput: 142, driftScore: 96, intent: "Capture & qualify inbound lead", action: "Lead ingested, scored 87/100" },
+  { id: "2", label: "Qualify & Route", agent: "Salesforce", status: "success", x: 220, y: 140, children: ["4"], detail: "Enterprise tier detected", throughput: 98, driftScore: 93, intent: "Route to enterprise pipeline", action: "Classified as enterprise tier" },
+  { id: "3", label: "Churn Risk Check", agent: "ChurnZero", status: "warning", x: 580, y: 140, children: ["5"], detail: "Risk score elevated: 0.72", throughput: 44, driftScore: 68, intent: "Assess retention probability", action: "Risk elevated but no flag raised" },
+  { id: "4", label: "MCP Handoff → Zendesk", agent: "MCP Bridge", status: "success", x: 220, y: 240, children: ["6"], detail: "Context payload: 2.1KB", throughput: 91, driftScore: 91, intent: "Transfer full context to support", action: "Payload transmitted (2.1KB)" },
+  { id: "5", label: "Retention Trigger", agent: "ChurnZero", status: "critical", x: 580, y: 240, children: ["7"], detail: "DRIFT: Reasoning misaligned", throughput: 12, driftScore: 31, intent: "Initiate proactive retention flow", action: "Triggered generic response template" },
+  { id: "6", label: "Ticket Created", agent: "Zendesk", status: "success", x: 140, y: 340, children: [], detail: "Ticket #ZD-4892 created", throughput: 87, driftScore: 95, intent: "Create prioritized support ticket", action: "Ticket #ZD-4892 created" },
+  { id: "7", label: "Escalation Failed", agent: "ChurnZero", status: "critical", x: 580, y: 340, children: [], detail: "Missing customer context", throughput: 3, driftScore: 12, intent: "Escalate to human with full context", action: "Escalation dropped—no context attached" },
 ];
 
 const statusColors: Record<NodeStatus, string> = {
