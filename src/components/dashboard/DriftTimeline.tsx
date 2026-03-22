@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import MentionTextarea, { renderWithMentions } from "./MentionTextarea";
 
 type Severity = "critical" | "warning" | "info" | "resolved";
 
@@ -103,6 +104,21 @@ export default function DriftTimeline() {
 
   const handleAddAnnotation = (eventId: string) => {
     if (!draftText.trim()) return;
+
+    // Extract @mentions and notify
+    const mentions = draftText.match(/@([\w\s]+?)(?=\s@|\s*$|[.,!?])/g);
+    if (mentions) {
+      mentions.forEach((m) => {
+        const name = m.slice(1).trim();
+        const member = TEAM_MEMBERS.find((t) => t.name === name);
+        if (member) {
+          toast(`🔔 ${member.name} was mentioned`, {
+            description: `${currentUser.name} tagged ${member.name} on event ${eventId}`,
+          });
+        }
+      });
+    }
+
     const newAnnotation: Annotation = {
       id: `ann-${Date.now()}`,
       author: currentUser.name,
@@ -211,7 +227,7 @@ export default function DriftTimeline() {
                                 <span className="text-[10px] font-semibold text-foreground">{ann.author}</span>
                                 <span className="text-[9px] text-muted-foreground">{timeAgo(ann.timestamp)}</span>
                               </div>
-                              <p className="text-[10px] text-muted-foreground leading-relaxed">{ann.text}</p>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">{renderWithMentions(ann.text)}</p>
                             </div>
                           </div>
                         ))}
@@ -221,10 +237,11 @@ export default function DriftTimeline() {
                             {currentUser.avatar}
                           </div>
                           <div className="flex-1 space-y-1.5">
-                            <Textarea
+                            <MentionTextarea
                               value={draftText}
-                              onChange={(e) => setDraftText(e.target.value)}
-                              placeholder="Add a note for your team..."
+                              onChange={setDraftText}
+                              teamMembers={TEAM_MEMBERS.filter(m => m.name !== currentUser.name)}
+                              placeholder="Add a note... Type @ to mention a teammate"
                               className="min-h-[60px] text-[10px] bg-background/50 border-border/50 resize-none"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
