@@ -31,12 +31,31 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 interface DriftAnalyticsProps {
   simulationPeak?: number | null;
+  canaryActive?: boolean;
 }
 
-export default function DriftAnalytics({ simulationPeak }: DriftAnalyticsProps) {
+const CANARY_DATA = [
+  { day: "Mon", variance: 4.2 },
+  { day: "Tue", variance: 8.1 },
+  { day: "Wed", variance: 5.6 },
+  { day: "Thu", variance: 14.3 },
+  { day: "Fri", variance: 22.1 },
+  { day: "Sat", variance: 11.8 },
+  { day: "Sun", variance: 9.2 },
+  { day: "Mon", variance: 16.4 },
+  { day: "Tue", variance: 12.7 },
+  { day: "Wed", variance: 7.9 },
+  { day: "Thu", variance: 24.8 },
+  { day: "Fri", variance: 18.3 },
+  { day: "Sat", variance: 10.1 },
+  { day: "Sun", variance: 6.5 },
+];
+
+export default function DriftAnalytics({ simulationPeak, canaryActive }: DriftAnalyticsProps) {
+  const baseData = canaryActive ? CANARY_DATA : BASE_DATA;
   const data = simulationPeak
-    ? [...BASE_DATA, { day: "Now", variance: simulationPeak }]
-    : BASE_DATA;
+    ? [...baseData, { day: "Now", variance: simulationPeak }]
+    : baseData;
 
   const avgVariance = (data.reduce((s, d) => s + d.variance, 0) / data.length).toFixed(1);
   const maxVariance = Math.max(...data.map((d) => d.variance)).toFixed(1);
