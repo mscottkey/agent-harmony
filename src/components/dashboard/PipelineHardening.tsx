@@ -365,7 +365,7 @@ export default function PipelineHardening() {
               <span className="w-2 h-2 rounded-full bg-muted-foreground" />
               <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Original Orchestrator Prompt</span>
             </div>
-            <pre className="text-[10px] font-mono text-foreground/70 whitespace-pre-wrap leading-relaxed bg-background/50 rounded-md p-3 border border-border/50 max-h-[220px] overflow-y-auto">
+            <pre className="text-[11px] font-mono text-foreground/70 whitespace-pre-wrap leading-[1.6] bg-background/50 rounded-md p-3 border border-muted-foreground/20 max-h-[260px] overflow-y-auto">
               {ORIGINAL_PROMPT}
             </pre>
           </div>
@@ -395,7 +395,7 @@ export default function PipelineHardening() {
             <textarea
               value={hardenedInstruction}
               onChange={(e) => setHardenedInstruction(e.target.value)}
-              className="w-full text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-background/50 rounded-md p-3 border border-primary/20 max-h-[220px] min-h-[180px] resize-none focus:outline-none focus:ring-1 focus:ring-primary/50"
+              className="w-full text-[11px] font-mono text-foreground whitespace-pre-wrap leading-[1.6] bg-background/50 rounded-md p-3 border border-primary/30 max-h-[260px] min-h-[180px] resize-none focus:outline-none focus:ring-1 focus:ring-primary/50"
               placeholder="Enter hardened instructions to prevent drift..."
             />
           </div>

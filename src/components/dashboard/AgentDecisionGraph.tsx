@@ -671,9 +671,9 @@ export default function AgentDecisionGraph({
                   {topology !== "sequential" && (
                     <>
                       <rect x={node.x + 20} y={node.y - 14} width={62} height={12} rx={6}
-                        fill="hsl(200, 60%, 50%)" fillOpacity={0.12} stroke="hsl(200, 60%, 50%)" strokeOpacity={0.3} strokeWidth={0.8}
+                        fill="hsl(200, 60%, 50%)" fillOpacity={0.06} stroke="hsl(200, 60%, 50%)" strokeOpacity={0.15} strokeWidth={0.8}
                       />
-                      <text x={node.x + 51} y={node.y - 5} textAnchor="middle" fill="hsl(200, 60%, 55%)" className="text-[6px] font-mono">📍 {region}</text>
+                      <text x={node.x + 51} y={node.y - 5} textAnchor="middle" fill="hsl(200, 40%, 40%)" className="text-[5.5px] font-mono">📍 {region}</text>
                     </>
                   )}
                   {/* Auto-rollback badge */}

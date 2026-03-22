@@ -22,9 +22,9 @@ const BASE_DATA = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md border border-border bg-card p-2 shadow-lg">
+    <div className="rounded-md border border-border bg-card p-2 shadow-lg min-w-[120px]">
       <p className="text-xs font-medium text-foreground">{label}</p>
-      <p className="text-xs text-primary">Variance: {payload[0].value}%</p>
+      <p className="text-xs font-mono text-primary">Variance: {payload[0].value}%</p>
     </div>
   );
 };
@@ -81,7 +81,7 @@ export default function DriftAnalytics({ simulationPeak, canaryActive }: DriftAn
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={data}>
             <defs>
               <linearGradient id="varianceGrad" x1="0" y1="0" x2="0" y2="1">
@@ -89,9 +89,9 @@ export default function DriftAnalytics({ simulationPeak, canaryActive }: DriftAn
                 <stop offset="95%" stopColor="hsl(187, 80%, 48%)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 20%, 16%)" />
-            <XAxis dataKey="day" tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 10 }} axisLine={false} tickLine={false} unit="%" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 20%, 16%)" strokeOpacity={0.15} />
+            <XAxis dataKey="day" tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }} axisLine={false} tickLine={false} unit="%" />
             <Tooltip content={<CustomTooltip />} />
             <Area
               type="monotone"
@@ -100,6 +100,8 @@ export default function DriftAnalytics({ simulationPeak, canaryActive }: DriftAn
               strokeWidth={2}
               fill="url(#varianceGrad)"
               animationDuration={800}
+              dot={{ r: 2.5, fill: "hsl(187, 80%, 48%)", strokeWidth: 0 }}
+              activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(187, 80%, 48%)" }}
             />
           </AreaChart>
         </ResponsiveContainer>

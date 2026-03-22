@@ -41,15 +41,15 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
   }, [canaryActive]);
 
   const avgScore = (scores.reduce((a, b) => a + b, 0) / scores.length * 100).toFixed(0);
-  const cx = 150, cy = 140, maxR = 110;
+  const cx = 180, cy = 160, maxR = 125;
 
   const points = scores.map((s, i) => {
     const angle = (Math.PI * 2 * i) / scores.length - Math.PI / 2;
     return {
       x: cx + Math.cos(angle) * maxR * s,
       y: cy + Math.sin(angle) * maxR * s,
-      lx: cx + Math.cos(angle) * (maxR + 16),
-      ly: cy + Math.sin(angle) * (maxR + 16),
+      lx: cx + Math.cos(angle) * (maxR + 28),
+      ly: cy + Math.sin(angle) * (maxR + 28),
       ax: cx + Math.cos(angle) * maxR,
       ay: cy + Math.sin(angle) * maxR,
     };
@@ -79,7 +79,7 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
         </div>
       </CardHeader>
       <CardContent>
-        <svg width="300" height="290" viewBox="0 0 300 290" className="w-full max-w-[300px] mx-auto">
+        <svg width="360" height="340" viewBox="0 0 360 340" className="w-full max-w-[360px] mx-auto">
           {/* Grid */}
           {gridLevels.map((level) => {
             const gridPoints = DIMENSIONS.map((_, i) => {
@@ -127,7 +127,7 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
               key={i}
               cx={p.x}
               cy={p.y}
-              r={2.5}
+              r={3.5}
               fill={scores[i] >= 0.8 ? "hsl(152, 60%, 48%)" : scores[i] >= 0.6 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
               className="transition-all duration-700"
             />
@@ -135,8 +135,8 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
           {/* Labels */}
           {DIMENSIONS.map((dim, i) => {
             const angle = (Math.PI * 2 * i) / DIMENSIONS.length - Math.PI / 2;
-            const lx = cx + Math.cos(angle) * (maxR + 20);
-            const ly = cy + Math.sin(angle) * (maxR + 20);
+            const lx = cx + Math.cos(angle) * (maxR + 28);
+            const ly = cy + Math.sin(angle) * (maxR + 28);
             return (
               <text
                 key={dim}
@@ -144,10 +144,10 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
                 y={ly}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="text-[5.5px] font-mono"
+                className="text-[7px] font-mono"
                 fill="hsl(215, 20%, 55%)"
               >
-                {dim.length > 14 ? dim.slice(0, 12) + "…" : dim}
+                {dim}
               </text>
             );
           })}
