@@ -113,32 +113,7 @@ export default function DiscoveryLab() {
   }, [logs]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border px-4 sm:px-6 py-4">
-        <div className="flex items-center justify-between max-w-[1600px] mx-auto">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => navigate("/")}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Search className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-sm font-semibold tracking-tight">Discovery Lab</h1>
-              <p className="text-[10px] text-muted-foreground font-mono">Intent Extraction & Behavioral Baselining</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {scanComplete && (
-              <Badge variant="outline" className="text-[10px] bg-drift-success/10 text-drift-success border-drift-success/30 animate-fade-in">
-                <CheckCircle className="w-3 h-3 mr-1" /> All Baselines Locked
-              </Badge>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-[1600px] mx-auto p-4 sm:p-6 flex-1 space-y-4">
+    <div className="space-y-4 animate-fade-in">
         {/* Scan Control */}
         <Card>
           <CardHeader className="pb-3">
