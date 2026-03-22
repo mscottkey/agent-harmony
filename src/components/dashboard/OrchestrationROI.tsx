@@ -98,8 +98,26 @@ export default function OrchestrationROI({ intentLockActive }: OrchestrationROIP
               <div className="text-sm font-bold text-drift-success">$4,280</div>
               <p className="text-[9px] text-muted-foreground">saved from reduced<br />infinite loop tokens</p>
             </div>
-          </div>
         </div>
+
+        {/* Waste Prevented by Intent Lock */}
+        {intentLockActive && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 animate-fade-in">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5">
+                <ShieldAlert className="w-3 h-3 text-primary" />
+                <span className="text-[9px] font-mono text-muted-foreground uppercase">Waste Prevented (Intent Lock)</span>
+              </div>
+              <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/30">
+                🔐 ACTIVE
+              </Badge>
+            </div>
+            <div className="text-xl font-bold text-primary">$1,840</div>
+            <p className="text-[9px] text-muted-foreground mt-0.5">
+              3 unauthorized agent loops blocked · 847 wasted tokens prevented this session
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
