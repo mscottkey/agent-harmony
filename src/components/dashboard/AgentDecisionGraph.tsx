@@ -75,6 +75,7 @@ interface AgentDecisionGraphProps {
   autoRollbackEnabled?: boolean;
   semanticGateEnabled?: boolean;
   onEscalationClick?: () => void;
+  intentLayerVisible?: boolean;
 }
 
 const PENDING_PAYLOAD = `{
