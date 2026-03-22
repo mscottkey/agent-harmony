@@ -76,6 +76,7 @@ interface AgentDecisionGraphProps {
   semanticGateEnabled?: boolean;
   onEscalationClick?: () => void;
   intentLayerVisible?: boolean;
+  missionPoliciesActive?: boolean;
 }
 
 const PENDING_PAYLOAD = `{
