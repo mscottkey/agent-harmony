@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useDriftNotifications } from "@/hooks/use-drift-notifications";
+import { toast } from "sonner";
 
-type NodeStatus = "success" | "warning" | "critical" | "running" | "idle";
+type NodeStatus = "success" | "warning" | "critical" | "running" | "idle" | "pending";
 
 interface GraphNode {
   id: string;
@@ -36,6 +38,7 @@ const statusColors: Record<NodeStatus, string> = {
   critical: "stroke-drift-critical fill-drift-critical/10",
   running: "stroke-primary fill-primary/10",
   idle: "stroke-muted-foreground fill-muted/50",
+  pending: "stroke-drift-warning fill-drift-warning/10",
 };
 
 const statusBadge: Record<NodeStatus, string> = {
@@ -44,6 +47,7 @@ const statusBadge: Record<NodeStatus, string> = {
   critical: "bg-drift-critical/15 text-drift-critical border-drift-critical/30",
   running: "bg-primary/15 text-primary border-primary/30",
   idle: "bg-muted text-muted-foreground border-border",
+  pending: "bg-drift-warning/15 text-drift-warning border-drift-warning/30",
 };
 
 const lineColor: Record<NodeStatus, string> = {
@@ -52,9 +56,8 @@ const lineColor: Record<NodeStatus, string> = {
   critical: "#ef4444",
   running: "#22b8cf",
   idle: "#64748b",
+  pending: "#f59e0b",
 };
-
-const statusList: NodeStatus[] = ["success", "warning", "critical", "running"];
 
 function jitter(base: number, range: number) {
   return Math.max(0, base + Math.floor((Math.random() - 0.5) * range));
@@ -70,18 +73,48 @@ interface LiveEvent {
 
 interface AgentDecisionGraphProps {
   autoRollbackEnabled?: boolean;
+  semanticGateEnabled?: boolean;
   onEscalationClick?: () => void;
 }
 
-export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscalationClick }: AgentDecisionGraphProps) {
+const PENDING_PAYLOAD = `{
+  "action": "escalate_to_human",
+  "customer_id": "ENT-8847",
+  "context": {
+    "churn_score": 0.89,
+    "tier": "enterprise",
+    "ltv": "$284,000",
+    "open_tickets": 3
+  },
+  "priority": "P1",
+  "routing": "senior_ops"
+}`;
+
+export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanticGateEnabled = false, onEscalationClick }: AgentDecisionGraphProps) {
   const { alertCriticalDrift } = useDriftNotifications();
   const [nodes, setNodes] = useState(INITIAL_NODES);
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [eventCounter, setEventCounter] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState(PENDING_PAYLOAD);
+  const [showPayloadEditor, setShowPayloadEditor] = useState(false);
 
   const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
+
+  // When semantic gate is enabled, convert context-mismatch nodes to "pending"
+  useEffect(() => {
+    if (semanticGateEnabled) {
+      setNodes((prev) =>
+        prev.map((node) => {
+          if ((node.id === "5" || node.id === "7") && (node.status === "critical")) {
+            return { ...node, status: "pending" as NodeStatus, detail: "⏳ Awaiting human payload review" };
+          }
+          return node;
+        })
+      );
+    }
+  }, [semanticGateEnabled]);
 
   // Simulate live node status fluctuations
   useEffect(() => {
@@ -89,16 +122,21 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
     const interval = setInterval(() => {
       setNodes((prev) =>
         prev.map((node) => {
+          // Don't fluctuate pending nodes
+          if (node.status === "pending" && semanticGateEnabled) return node;
+          
           const roll = Math.random();
           let newStatus = node.status;
           let newDetail = node.detail;
           const newThroughput = jitter(node.throughput ?? 50, 20);
           let newDriftScore = Math.max(0, Math.min(100, node.driftScore + Math.floor((Math.random() - 0.5) * 6)));
 
-          // Nodes 5 and 7 flicker between critical/warning more often
           if (node.id === "5" || node.id === "7") {
             newDriftScore = Math.max(5, Math.min(50, node.driftScore + Math.floor((Math.random() - 0.3) * 12)));
-            if (roll < 0.3) {
+            if (semanticGateEnabled && roll < 0.15) {
+              newStatus = "pending";
+              newDetail = "⏳ Awaiting human payload review";
+            } else if (roll < 0.3) {
               newStatus = "warning";
               newDetail = roll < 0.15 ? "Drift recovering..." : "Partial context match";
             } else if (roll < 0.7) {
@@ -135,7 +173,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
       );
     }, 2000);
     return () => clearInterval(interval);
-  }, [paused]);
+  }, [paused, semanticGateEnabled]);
 
   // Generate live event feed
   useEffect(() => {
@@ -176,6 +214,23 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
     return () => clearInterval(t);
   }, []);
 
+  const handleApprovePayload = () => {
+    setNodes((prev) =>
+      prev.map((node) => {
+        if (node.status === "pending") {
+          return { ...node, status: "success", detail: "✓ Payload approved by human operator", driftScore: 85 };
+        }
+        return node;
+      })
+    );
+    setShowPayloadEditor(false);
+    setSelected(null);
+    toast.success("Payload approved and forwarded to ChurnZero", {
+      description: "Human-verified context transmitted via MCP Bridge",
+      duration: 4000,
+    });
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -193,10 +248,15 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
               {paused ? "▶ Resume" : "⏸ Pause"}
             </button>
           </div>
-          <div className="flex gap-2">
-            {(["success", "warning", "critical"] as NodeStatus[]).map((s) => (
+          <div className="flex gap-2 flex-wrap justify-end">
+            {(["success", "warning", "critical", ...(semanticGateEnabled ? ["pending" as NodeStatus] : [])] as NodeStatus[]).map((s) => (
               <span key={s} className={`inline-flex items-center gap-1.5 text-xs ${statusBadge[s]} rounded-full px-2 py-0.5 border`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${s === "success" ? "bg-drift-success" : s === "warning" ? "bg-drift-warning" : "bg-drift-critical"}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  s === "success" ? "bg-drift-success" : 
+                  s === "warning" ? "bg-drift-warning" : 
+                  s === "pending" ? "bg-drift-warning" :
+                  "bg-drift-critical"
+                }`} />
                 {s}
               </span>
             ))}
@@ -224,10 +284,9 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
                       stroke={lineColor[targetStatus]}
                       strokeWidth={2}
                       strokeOpacity={0.3}
-                      strokeDasharray={targetStatus === "critical" ? "6 3" : "none"}
+                      strokeDasharray={targetStatus === "critical" ? "6 3" : targetStatus === "pending" ? "4 4" : "none"}
                     />
-                    {/* Animated particle */}
-                    {!paused && (
+                    {!paused && targetStatus !== "pending" && (
                       <circle
                         cx={px} cy={py} r={3}
                         fill={lineColor[targetStatus]}
@@ -242,10 +301,14 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
               <g
                 key={node.id}
                 onClick={() => {
-                  if (node.id === "7" && onEscalationClick) {
+                  if (node.status === "pending") {
+                    setSelected(node);
+                    setShowPayloadEditor(true);
+                  } else if (node.id === "7" && onEscalationClick) {
                     onEscalationClick();
                   } else {
                     setSelected(node);
+                    setShowPayloadEditor(false);
                   }
                 }}
                 className="cursor-pointer"
@@ -253,7 +316,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
                 <rect
                   x={node.x - 80} y={node.y}
                   width={160} height={68} rx={8}
-                  className={`${statusColors[node.status]} stroke-[1.5] transition-all duration-500 ${node.status === "critical" ? "node-pulse" : ""}`}
+                  className={`${statusColors[node.status]} stroke-[1.5] transition-all duration-500 ${node.status === "critical" ? "node-pulse" : ""} ${node.status === "pending" ? "animate-pulse" : ""}`}
                 />
                 <text x={node.x} y={node.y + 16} textAnchor="middle" className="fill-foreground text-[11px] font-medium">
                   {node.label}
@@ -261,27 +324,35 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
                 <text x={node.x} y={node.y + 30} textAnchor="middle" className="fill-muted-foreground text-[9px] font-mono">
                   {node.agent}
                 </text>
-                <text x={node.x - 30} y={node.y + 44} textAnchor="middle" className="fill-muted-foreground text-[8px] font-mono">
-                  {node.throughput ?? 0} req/s
-                </text>
-                <rect
-                  x={node.x + 8} y={node.y + 36}
-                  width={48} height={16} rx={8}
-                  fill={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
-                  fillOpacity={0.2}
-                  stroke={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
-                  strokeOpacity={0.4}
-                  strokeWidth={1}
-                />
-                <text
-                  x={node.x + 32} y={node.y + 48}
-                  textAnchor="middle"
-                  fill={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
-                  className="text-[8px] font-mono font-semibold"
-                >
-                  DS:{node.driftScore}
-                </text>
-                {node.driftScore < 50 && (
+                {node.status === "pending" ? (
+                  <text x={node.x} y={node.y + 44} textAnchor="middle" className="text-[8px] font-mono" fill="hsl(38, 92%, 55%)">
+                    ⏳ PENDING APPROVAL
+                  </text>
+                ) : (
+                  <>
+                    <text x={node.x - 30} y={node.y + 44} textAnchor="middle" className="fill-muted-foreground text-[8px] font-mono">
+                      {node.throughput ?? 0} req/s
+                    </text>
+                    <rect
+                      x={node.x + 8} y={node.y + 36}
+                      width={48} height={16} rx={8}
+                      fill={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
+                      fillOpacity={0.2}
+                      stroke={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
+                      strokeOpacity={0.4}
+                      strokeWidth={1}
+                    />
+                    <text
+                      x={node.x + 32} y={node.y + 48}
+                      textAnchor="middle"
+                      fill={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
+                      className="text-[8px] font-mono font-semibold"
+                    >
+                      DS:{node.driftScore}
+                    </text>
+                  </>
+                )}
+                {node.driftScore < 50 && node.status !== "pending" && (
                   <text x={node.x} y={node.y + 62} textAnchor="middle" className="text-[7px] font-mono" fill="hsl(0, 72%, 55%)">
                     ⚠ semantic mismatch
                   </text>
@@ -305,6 +376,28 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
                       className="text-[7px] font-mono font-semibold"
                     >
                       ✓ State Reverted
+                    </text>
+                  </g>
+                )}
+                {/* Pending Approval badge */}
+                {node.status === "pending" && (
+                  <g>
+                    <rect
+                      x={node.x - 80} y={node.y - 16}
+                      width={100} height={14} rx={7}
+                      fill="hsl(38, 92%, 55%)"
+                      fillOpacity={0.15}
+                      stroke="hsl(38, 92%, 55%)"
+                      strokeOpacity={0.4}
+                      strokeWidth={1}
+                    />
+                    <text
+                      x={node.x - 30} y={node.y - 6}
+                      textAnchor="middle"
+                      fill="hsl(38, 92%, 55%)"
+                      className="text-[7px] font-mono font-semibold"
+                    >
+                      🔍 Click to Review
                     </text>
                   </g>
                 )}
@@ -341,9 +434,41 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
           </div>
         </div>
 
-        {selected && (
+        {/* Payload Editor for Pending Approval nodes */}
+        {showPayloadEditor && selected?.status === "pending" && (
+          <div className="border-t border-drift-warning/30 p-4 bg-drift-warning/5 animate-fade-in-up">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-mono text-drift-warning uppercase tracking-wider">Human Payload Review</span>
+              <Badge variant="outline" className="text-[9px] bg-drift-warning/15 text-drift-warning border-drift-warning/30">
+                {selected.label}
+              </Badge>
+            </div>
+            <p className="text-[10px] text-muted-foreground mb-3">
+              Semantic Verification Gate intercepted a context mismatch. Review and edit the JSON payload before forwarding to {selected.agent}.
+            </p>
+            <textarea
+              value={pendingPayload}
+              onChange={(e) => setPendingPayload(e.target.value)}
+              className="w-full text-[10px] font-mono text-foreground bg-background/80 rounded-md p-3 border border-drift-warning/20 min-h-[140px] resize-none focus:outline-none focus:ring-1 focus:ring-drift-warning/50 mb-3"
+            />
+            <div className="flex gap-2">
+              <Button size="sm" className="flex-1 text-[10px] h-8" onClick={handleApprovePayload}>
+                ✓ Approve & Forward Payload
+              </Button>
+              <Button size="sm" variant="outline" className="text-[10px] h-8 border-drift-critical/30 text-drift-critical" onClick={() => {
+                setShowPayloadEditor(false);
+                setSelected(null);
+              }}>
+                ✕ Reject
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Standard node detail panel */}
+        {selected && !showPayloadEditor && (
           <div className="border-t border-border p-4 animate-fade-in-up">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
               <span className="font-medium text-sm">{selected.label}</span>
               <Badge variant="outline" className={statusBadge[selected.status]}>
                 {selected.status}
