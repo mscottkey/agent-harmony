@@ -315,7 +315,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                 ))}
               </g>
             )}
-            {/* Edges with animated particles */}
+            {/* Edges with animated particles and Goal Alignment meters */}
             {nodes.map((node) =>
               node.children.map((childId) => {
                 const child = nodeMap[childId];
@@ -325,6 +325,12 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                 const progress = ((particleTick * 1.5) % 100) / 100;
                 const px = x1 + (x2 - x1) * progress;
                 const py = y1 + (y2 - y1) * progress;
+
+                // Goal alignment = average of parent+child drift scores
+                const goalAlignment = Math.round((node.driftScore + child.driftScore) / 2);
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                const isLowAlignment = goalAlignment < 70;
 
                 return (
                   <g key={`${node.id}-${childId}`}>
@@ -341,6 +347,29 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                         fill={lineColor[targetStatus]}
                         opacity={0.8}
                       />
+                    )}
+                    {/* Goal Alignment Meter on handoff lines */}
+                    {missionPoliciesActive && (
+                      <g>
+                        <rect
+                          x={midX - 22} y={midY - 8}
+                          width={44} height={16} rx={8}
+                          fill={isLowAlignment ? "hsl(0, 72%, 55%)" : goalAlignment < 85 ? "hsl(38, 92%, 55%)" : "hsl(152, 60%, 48%)"}
+                          fillOpacity={0.2}
+                          stroke={isLowAlignment ? "hsl(0, 72%, 55%)" : goalAlignment < 85 ? "hsl(38, 92%, 55%)" : "hsl(152, 60%, 48%)"}
+                          strokeOpacity={0.5}
+                          strokeWidth={1}
+                          className={isLowAlignment ? "animate-pulse" : ""}
+                        />
+                        <text
+                          x={midX} y={midY + 3}
+                          textAnchor="middle"
+                          fill={isLowAlignment ? "hsl(0, 72%, 55%)" : goalAlignment < 85 ? "hsl(38, 92%, 55%)" : "hsl(152, 60%, 48%)"}
+                          className="text-[7px] font-mono font-bold"
+                        >
+                          🎯{goalAlignment}%
+                        </text>
+                      </g>
                     )}
                   </g>
                 );
