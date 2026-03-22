@@ -194,6 +194,7 @@ export default function Index() {
                 semanticGateEnabled={semanticGate}
                 onEscalationClick={() => setRcaModalOpen(true)}
                 intentLayerVisible={intentLayerVisible}
+                missionPoliciesActive={missionPoliciesActive}
               />
             </div>
             <DriftSimulator onSimulationComplete={handleSimulationComplete} />
