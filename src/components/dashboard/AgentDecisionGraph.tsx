@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useDriftNotifications } from "@/hooks/use-drift-notifications";
 
 type NodeStatus = "success" | "warning" | "critical" | "running" | "idle";
 
@@ -73,6 +74,7 @@ interface AgentDecisionGraphProps {
 }
 
 export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscalationClick }: AgentDecisionGraphProps) {
+  const { alertCriticalDrift } = useDriftNotifications();
   const [nodes, setNodes] = useState(INITIAL_NODES);
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [events, setEvents] = useState<LiveEvent[]>([]);
@@ -152,6 +154,9 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
       const evt = eventMessages[Math.floor(Math.random() * eventMessages.length)];
       setEventCounter((c) => c + 1);
       setEvents((prev) => [{ ...evt, id: eventCounter, timestamp: new Date() }, ...prev].slice(0, 5));
+      if (evt.status === "critical") {
+        alertCriticalDrift(evt.message);
+      }
     }, 3000);
     return () => clearInterval(interval);
   }, [paused, eventCounter]);
@@ -172,7 +177,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
   }, []);
 
   return (
-    <Card className="col-span-2 row-span-2">
+    <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

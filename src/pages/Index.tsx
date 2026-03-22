@@ -97,14 +97,18 @@ export default function Index() {
       {/* Dashboard Grid */}
       <main className="max-w-[1600px] mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 auto-rows-min">
-          <AgentDecisionGraph
-            autoRollbackEnabled={autoRollback}
-            onEscalationClick={() => setRcaModalOpen(true)}
-          />
+          <div className="lg:col-span-2 lg:row-span-2">
+            <AgentDecisionGraph
+              autoRollbackEnabled={autoRollback}
+              onEscalationClick={() => setRcaModalOpen(true)}
+            />
+          </div>
           <DriftSimulator onSimulationComplete={handleSimulationComplete} />
 
           <DriftAnalytics simulationPeak={simulationPeak} />
-          <MCPHub />
+          <div className="lg:col-span-2">
+            <MCPHub />
+          </div>
 
           <div className="lg:col-span-3">
             <SafetyGuardrails onRollbackChange={setAutoRollback} />
