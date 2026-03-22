@@ -104,6 +104,21 @@ export default function DriftTimeline() {
 
   const handleAddAnnotation = (eventId: string) => {
     if (!draftText.trim()) return;
+
+    // Extract @mentions and notify
+    const mentions = draftText.match(/@([\w\s]+?)(?=\s@|\s*$|[.,!?])/g);
+    if (mentions) {
+      mentions.forEach((m) => {
+        const name = m.slice(1).trim();
+        const member = TEAM_MEMBERS.find((t) => t.name === name);
+        if (member) {
+          toast(`🔔 ${member.name} was mentioned`, {
+            description: `${currentUser.name} tagged ${member.name} on event ${eventId}`,
+          });
+        }
+      });
+    }
+
     const newAnnotation: Annotation = {
       id: `ann-${Date.now()}`,
       author: currentUser.name,
