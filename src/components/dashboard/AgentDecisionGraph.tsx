@@ -154,6 +154,9 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
       const evt = eventMessages[Math.floor(Math.random() * eventMessages.length)];
       setEventCounter((c) => c + 1);
       setEvents((prev) => [{ ...evt, id: eventCounter, timestamp: new Date() }, ...prev].slice(0, 5));
+      if (evt.status === "critical") {
+        alertCriticalDrift(evt.message);
+      }
     }, 3000);
     return () => clearInterval(interval);
   }, [paused, eventCounter]);
