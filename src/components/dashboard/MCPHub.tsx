@@ -19,9 +19,9 @@ interface AgentCard {
 }
 
 const INITIAL_AGENTS: AgentCard[] = [
-  { name: "Salesforce", protocol: "A2A v1.2", latency: 42, successRate: 99.2, status: "connected", icon: "☁️", version: "v3.1.0", requests: 1847, versions: ["v3.1.0 (Stable)", "v3.2.0-beta (Canary)"] },
-  { name: "Zendesk", protocol: "A2A v1.1", latency: 78, successRate: 97.8, status: "connected", icon: "🎧", version: "v2.4.2", requests: 923 },
-  { name: "ChurnZero", protocol: "A2A v1.0", latency: 156, successRate: 91.4, status: "degraded", icon: "📊", version: "v1.8.1", requests: 412 },
+  { name: "Salesforce", protocol: "A2A v1.2", latency: 42, successRate: 99.2, status: "connected", icon: "☁️", version: "v3.1.0", requests: 1847, versions: ["v3.1.0 (Stable)", "v3.2.0-beta (Canary)"], semanticMission: "Lead Qualification & Pipeline Routing", constraint: "Read-Write (CRM Only)", permittedTools: ["lead.score", "lead.qualify", "opportunity.create", "pipeline.route"] },
+  { name: "Zendesk", protocol: "A2A v1.1", latency: 78, successRate: 97.8, status: "connected", icon: "🎧", version: "v2.4.2", requests: 923, semanticMission: "Service Recovery", constraint: "Read-Only (Billing)", permittedTools: ["ticket.create", "ticket.escalate", "ticket.resolve", "macro.apply"] },
+  { name: "ChurnZero", protocol: "A2A v1.0", latency: 156, successRate: 91.4, status: "degraded", icon: "📊", version: "v1.8.1", requests: 412, semanticMission: "Retention Intelligence", constraint: "Read-Only (No Direct Contact)", permittedTools: ["churn.predict", "health.score", "segment.analyze", "alert.trigger"] },
 ];
 
 const statusStyle: Record<string, string> = {
