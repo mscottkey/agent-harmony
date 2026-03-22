@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, CheckCircle, Loader2, Shield } from "lucide-react";
+import { Search, CheckCircle, Loader2, Shield, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface LogEntry {
   message: string;
@@ -72,6 +73,7 @@ const SCAN_LOGS: { message: string; type: "info" | "success" | "warning"; delay:
 ];
 
 export default function DiscoveryLab() {
+  const navigate = useNavigate();
   const [scanning, setScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -117,6 +119,9 @@ export default function DiscoveryLab() {
       <header className="border-b border-border px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between max-w-[1600px] mx-auto">
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => navigate("/")}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
             <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center">
               <Search className="w-4 h-4 text-primary" />
             </div>
