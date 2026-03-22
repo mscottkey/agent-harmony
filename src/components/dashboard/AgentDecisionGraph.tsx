@@ -86,9 +86,11 @@ export default function AgentDecisionGraph() {
           let newStatus = node.status;
           let newDetail = node.detail;
           const newThroughput = jitter(node.throughput ?? 50, 20);
+          let newDriftScore = Math.max(0, Math.min(100, node.driftScore + Math.floor((Math.random() - 0.5) * 6)));
 
           // Nodes 5 and 7 flicker between critical/warning more often
           if (node.id === "5" || node.id === "7") {
+            newDriftScore = Math.max(5, Math.min(50, node.driftScore + Math.floor((Math.random() - 0.3) * 12)));
             if (roll < 0.3) {
               newStatus = "warning";
               newDetail = roll < 0.15 ? "Drift recovering..." : "Partial context match";
@@ -100,7 +102,7 @@ export default function AgentDecisionGraph() {
               newDetail = "Re-evaluating pipeline...";
             }
           } else if (node.id === "3") {
-            // Churn risk check fluctuates
+            newDriftScore = Math.max(40, Math.min(85, node.driftScore + Math.floor((Math.random() - 0.5) * 10)));
             if (roll < 0.2) {
               newStatus = "critical";
               newDetail = `Risk score spiked: ${(0.8 + Math.random() * 0.19).toFixed(2)}`;
@@ -112,7 +114,7 @@ export default function AgentDecisionGraph() {
               newDetail = `Risk score normal: ${(0.2 + Math.random() * 0.3).toFixed(2)}`;
             }
           } else {
-            // Stable nodes occasionally flicker
+            newDriftScore = Math.max(80, Math.min(100, node.driftScore + Math.floor((Math.random() - 0.5) * 4)));
             if (roll < 0.08) {
               newStatus = "running";
               newDetail = "Processing batch...";
@@ -121,7 +123,7 @@ export default function AgentDecisionGraph() {
             }
           }
 
-          return { ...node, status: newStatus, detail: newDetail, throughput: newThroughput };
+          return { ...node, status: newStatus, detail: newDetail, throughput: newThroughput, driftScore: newDriftScore };
         })
       );
     }, 2000);
