@@ -7,11 +7,13 @@ import DriftAnalytics from "@/components/dashboard/DriftAnalytics";
 import DriftDiagnosticModal from "@/components/dashboard/DriftDiagnosticModal";
 import DriftTimeline from "@/components/dashboard/DriftTimeline";
 import PipelineHardening from "@/components/dashboard/PipelineHardening";
+import GovernanceVault from "@/components/dashboard/GovernanceVault";
+import PredictiveDrift from "@/components/dashboard/PredictiveDrift";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { SimResult } from "@/components/dashboard/DriftSimulator";
 
-type ViewMode = "monitoring" | "hardening";
+type ViewMode = "monitoring" | "hardening" | "vault";
 
 export default function Index() {
   const [simResult, setSimResult] = useState<SimResult | null>(null);
@@ -21,6 +23,7 @@ export default function Index() {
   const [rcaModalOpen, setRcaModalOpen] = useState(false);
   const [driftAlert, setDriftAlert] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("monitoring");
+  const [canaryActive, setCanaryActive] = useState(false);
 
   const handleSimulationComplete = useCallback((result: SimResult) => {
     setSimResult(result);
@@ -99,10 +102,10 @@ export default function Index() {
 
       {/* View Mode Tabs */}
       <div className="border-b border-border px-4 sm:px-6">
-        <div className="max-w-[1600px] mx-auto flex items-center gap-1">
+        <div className="max-w-[1600px] mx-auto flex items-center gap-1 overflow-x-auto">
           <button
             onClick={() => setViewMode("monitoring")}
-            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 ${
+            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 whitespace-nowrap ${
               viewMode === "monitoring"
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -112,7 +115,7 @@ export default function Index() {
           </button>
           <button
             onClick={() => setViewMode("hardening")}
-            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
               viewMode === "hardening"
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -121,6 +124,19 @@ export default function Index() {
             🛡️ Pipeline Hardening
             <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
               DEV
+            </span>
+          </button>
+          <button
+            onClick={() => setViewMode("vault")}
+            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+              viewMode === "vault"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            🏛️ Audit Vault
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-drift-warning/10 text-drift-warning border border-drift-warning/20">
+              NIST
             </span>
           </button>
         </div>
@@ -139,9 +155,10 @@ export default function Index() {
             </div>
             <DriftSimulator onSimulationComplete={handleSimulationComplete} />
 
-            <DriftAnalytics simulationPeak={simulationPeak} />
+            <PredictiveDrift canaryActive={canaryActive} />
+            <DriftAnalytics simulationPeak={simulationPeak} canaryActive={canaryActive} />
             <div className="lg:col-span-2">
-              <MCPHub />
+              <MCPHub onCanaryChange={setCanaryActive} />
             </div>
 
             <div className="lg:col-span-3">
@@ -154,9 +171,8 @@ export default function Index() {
               />
             </div>
           </div>
-        ) : (
+        ) : viewMode === "hardening" ? (
           <div className="space-y-4">
-            {/* Sandbox mode indicator */}
             <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
               <span className="text-[10px] font-mono text-primary uppercase tracking-wider">🧪 Safe-to-Try Sandbox</span>
               <span className="text-[10px] text-muted-foreground">Changes are isolated from production · No live agents affected</span>
@@ -168,6 +184,10 @@ export default function Index() {
                 onSemanticGateChange={setSemanticGate}
               />
             </div>
+          </div>
+        ) : (
+          <div className="space-y-4 animate-fade-in">
+            <GovernanceVault />
           </div>
         )}
       </main>
