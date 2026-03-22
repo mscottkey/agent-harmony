@@ -195,7 +195,7 @@ export default function AgentDecisionGraph() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="relative overflow-x-auto">
-          <svg width="780" height="400" className="w-full" viewBox="0 0 780 400">
+          <svg width="780" height="430" className="w-full" viewBox="0 0 780 430">
             {/* Edges with animated particles */}
             {nodes.map((node) =>
               node.children.map((childId) => {
