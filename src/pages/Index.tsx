@@ -218,6 +218,7 @@ export default function Index() {
                 onRollbackChange={setAutoRollback}
                 onSemanticGateChange={setSemanticGate}
                 onPiiRedactionChange={setPiiRedaction}
+                onIntentLockChange={setIntentLock}
               />
             </div>
           </div>
