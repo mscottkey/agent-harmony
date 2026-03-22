@@ -151,6 +151,19 @@ export default function Index() {
             </span>
           </button>
           <button
+            onClick={() => setViewMode("intent-studio")}
+            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+              viewMode === "intent-studio"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            🧠 Intent Studio
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+              NEW
+            </span>
+          </button>
+          <button
             onClick={() => navigate("/discovery")}
             className="px-4 py-2.5 text-xs font-medium transition-all border-b-2 border-transparent text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
           >
