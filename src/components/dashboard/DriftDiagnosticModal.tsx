@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface DriftDiagnosticModalProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface DriftDiagnosticModalProps {
 
 export default function DriftDiagnosticModal({ open, onOpenChange, onFixApplied }: DriftDiagnosticModalProps) {
   const [fixApplied, setFixApplied] = useState(false);
+  const [regressionSaved, setRegressionSaved] = useState(false);
 
   const handleApplyFix = () => {
     setFixApplied(true);
@@ -18,9 +20,115 @@ export default function DriftDiagnosticModal({ open, onOpenChange, onFixApplied 
     setTimeout(() => onOpenChange(false), 1500);
   };
 
+  const handleConvertToRegression = () => {
+    setRegressionSaved(true);
+    toast.success("Trajectory saved to Golden Dataset v2.1", {
+      description: "Failed trajectory converted to regression test case · 1 new assertion added to suite",
+      duration: 5000,
+    });
+  };
+
+  const handleExportEvidence = () => {
+    const report = `══════════════════════════════════════════════════
+  DRIFT ORCHESTRATOR — DECISION EVIDENCE REPORT
+  NIST AI 800-1 Compliance Artifact
+══════════════════════════════════════════════════
+
+Report ID:       DER-${Date.now().toString(36).toUpperCase()}
+Generated:       ${new Date().toISOString()}
+Classification:  CRITICAL DRIFT EVENT
+Compliance Ref:  NIST AI 800-1 §4.3 — Autonomous Decision Traceability
+
+──────────────────────────────────────────────────
+1. IDENTITY MANIFEST (A2A Agent Card)
+──────────────────────────────────────────────────
+Agent Name:      ChurnZero
+Agent Version:   v1.8.1
+Protocol:        A2A-MCP-v1.0
+Role:            Retention & Churn Prevention Agent
+Status:          DEGRADED — Schema Mismatch
+Latency (avg):   156ms
+Success Rate:    91.4%
+
+──────────────────────────────────────────────────
+2. TRACE DATA
+──────────────────────────────────────────────────
+Trace ID:        TRC-${Math.random().toString(36).substring(2, 10).toUpperCase()}
+Span ID:         SPN-${Math.random().toString(36).substring(2, 10).toUpperCase()}
+Parent Span:     SPN-MCP-HANDOFF-4A2B
+
+Source Agent:     Salesforce Agent (v3.1.0)
+Target Agent:     ChurnZero Agent (v1.8.1)
+Handoff Protocol: MCP Bridge (A2A-MCP-v2.0 → v1.0)
+
+Intent Payload (Salesforce):
+{
+  "action": "escalate_to_human",
+  "customer_id": "ENT-8847",
+  "context": {
+    "churn_score": 0.89,
+    "tier": "enterprise",
+    "ltv": "$284,000",
+    "open_tickets": 3,
+    "sentiment": "frustrated"
+  },
+  "priority": "P1",
+  "routing": "senior_ops"
+}
+
+Error Response (ChurnZero):
+{
+  "status": "FAILED",
+  "error": "UNRECOGNIZED_FIELD",
+  "details": {
+    "field": "context.sentiment",
+    "message": "Field 'sentiment' not in A2A schema v1.0",
+    "expected_schema": "A2A-MCP-v1.0",
+    "received_schema": "A2A-MCP-v2.0"
+  },
+  "fallback": "generic_template",
+  "escalation": null
+}
+
+──────────────────────────────────────────────────
+3. ROOT CAUSE ANALYSIS
+──────────────────────────────────────────────────
+Failure Mode:    Semantic Mismatch — Schema Version Incompatibility
+Root Cause:      Salesforce Agent transmitting v2.0 schema fields to
+                 ChurnZero Agent expecting v1.0 schema
+Impact:          Customer escalation dropped — no context attached
+Drift Score:     12/100 (CRITICAL — below 50 threshold)
+
+──────────────────────────────────────────────────
+4. REMEDIATION APPLIED
+──────────────────────────────────────────────────
+Action:          Context Integrity Check added to Salesforce Handoff
+Description:     Schema validation layer normalizes payload to
+                 A2A-MCP-v1.0 before MCP transmission
+Status:          APPLIED
+Timestamp:       ${new Date().toISOString()}
+
+══════════════════════════════════════════════════
+  END OF REPORT — Retain for audit period (7 years)
+══════════════════════════════════════════════════`;
+
+    const blob = new Blob([report], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `drift-evidence-report-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast.success("Decision Evidence Report exported", {
+      description: "NIST AI 800-1 compliant audit artifact generated",
+      duration: 4000,
+    });
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setFixApplied(false); }}>
-      <DialogContent className="max-w-2xl bg-card border-border">
+    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) { setFixApplied(false); setRegressionSaved(false); } }}>
+      <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <span>Drift Diagnostic · Root Cause Analysis</span>
@@ -34,7 +142,7 @@ export default function DriftDiagnosticModal({ open, onOpenChange, onFixApplied 
           {/* Trace Data */}
           <div>
             <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-2">Trace Data · Payload Comparison</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="rounded-lg border border-drift-success/20 bg-drift-success/5 p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="w-2 h-2 rounded-full bg-drift-success" />
@@ -96,7 +204,7 @@ export default function DriftDiagnosticModal({ open, onOpenChange, onFixApplied 
                   Schema Mismatch
                 </Badge>
               </div>
-              <div className="grid grid-cols-4 gap-3 text-center">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                 <div className="rounded-md bg-card border border-border p-2">
                   <div className="text-xs font-mono font-semibold">v1.8.1</div>
                   <div className="text-[9px] text-muted-foreground">Version</div>
@@ -149,6 +257,27 @@ export default function DriftDiagnosticModal({ open, onOpenChange, onFixApplied 
                 </>
               )}
             </div>
+          </div>
+
+          {/* Regression Suite & Export Actions */}
+          <div className="flex flex-col sm:flex-row gap-2 pt-1 border-t border-border">
+            <Button
+              variant="outline"
+              size="sm"
+              className={`flex-1 text-[10px] h-8 transition-all ${regressionSaved ? "border-drift-success/30 text-drift-success bg-drift-success/5" : "border-border"}`}
+              onClick={handleConvertToRegression}
+              disabled={regressionSaved}
+            >
+              {regressionSaved ? "✓ Saved to Golden Dataset v2.1" : "🧪 Convert to Regression Test Case"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-[10px] h-8 border-border"
+              onClick={handleExportEvidence}
+            >
+              📋 Export Decision Evidence (NIST AI 800-1)
+            </Button>
           </div>
         </div>
       </DialogContent>
