@@ -79,7 +79,8 @@ export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChang
             className={`flex items-start justify-between gap-3 rounded-lg border p-3 transition-all ${
               g.enabled ? "border-primary/20 bg-primary/5" : "border-border bg-card"
             } ${g.id === "semantic-gate" && g.enabled ? "border-drift-warning/30 bg-drift-warning/5" : ""}
-            ${g.id === "pii-redaction" && g.enabled ? "border-drift-info/30 bg-drift-info/5" : ""}`}
+            ${g.id === "pii-redaction" && g.enabled ? "border-drift-info/30 bg-drift-info/5" : ""}
+            ${g.id === "intent-lock" && g.enabled ? "border-primary/30 bg-primary/5" : ""}`}
           >
             <div className="space-y-0.5 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
