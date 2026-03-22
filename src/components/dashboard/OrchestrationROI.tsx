@@ -98,6 +98,7 @@ export default function OrchestrationROI({ intentLockActive }: OrchestrationROIP
               <div className="text-sm font-bold text-drift-success">$4,280</div>
               <p className="text-[9px] text-muted-foreground">saved from reduced<br />infinite loop tokens</p>
             </div>
+          </div>
         </div>
 
         {/* Waste Prevented by Intent Lock */}
