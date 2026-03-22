@@ -402,7 +402,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                 <rect
                   x={node.x - 80} y={node.y}
                   width={160} height={68} rx={8}
-                  className={`${statusColors[node.status]} stroke-[1.5] transition-all duration-500 ${node.status === "critical" ? "node-pulse" : ""} ${node.status === "pending" ? "animate-pulse" : ""}`}
+                  className={`${statusColors[node.status]} stroke-[1.5] transition-all duration-500 ${node.status === "critical" ? "node-pulse" : ""} ${node.status === "pending" ? "animate-pulse" : ""} ${missionPoliciesActive && node.status === "running" ? "vibe-glow" : ""}`}
                 />
                 <text x={node.x} y={node.y + 16} textAnchor="middle" className="fill-foreground text-[11px] font-medium">
                   {node.label}
