@@ -237,10 +237,11 @@ export default function DriftTimeline() {
                             {currentUser.avatar}
                           </div>
                           <div className="flex-1 space-y-1.5">
-                            <Textarea
+                            <MentionTextarea
                               value={draftText}
-                              onChange={(e) => setDraftText(e.target.value)}
-                              placeholder="Add a note for your team..."
+                              onChange={setDraftText}
+                              teamMembers={TEAM_MEMBERS.filter(m => m.name !== currentUser.name)}
+                              placeholder="Add a note... Type @ to mention a teammate"
                               className="min-h-[60px] text-[10px] bg-background/50 border-border/50 resize-none"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
