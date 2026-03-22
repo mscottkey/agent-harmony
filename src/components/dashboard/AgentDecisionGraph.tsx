@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useDriftNotifications } from "@/hooks/use-drift-notifications";
 
 type NodeStatus = "success" | "warning" | "critical" | "running" | "idle";
 
