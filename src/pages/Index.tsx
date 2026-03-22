@@ -22,7 +22,6 @@ import type { SimResult } from "@/components/dashboard/DriftSimulator";
 type ViewMode = "monitoring" | "hardening" | "vault" | "intent-studio" | "discovery";
 
 export default function Index() {
-  const navigate = useNavigate();
   const [simResult, setSimResult] = useState<SimResult | null>(null);
   const [simulationPeak, setSimulationPeak] = useState<number | null>(null);
   const [autoRollback, setAutoRollback] = useState(true);
