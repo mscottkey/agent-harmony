@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -18,13 +17,23 @@ const INITIAL: Guardrail[] = [
   { id: "escalation-path", label: "Escalation Path Override", description: "Route critical drift events to senior ops team", enabled: false, type: "escalation" },
 ];
 
-export default function SafetyGuardrails() {
-  const [guardrails, setGuardrails] = useState(INITIAL);
+interface SafetyGuardrailsProps {
+  onRollbackChange?: (enabled: boolean) => void;
+}
+
+export default function SafetyGuardrails({ onRollbackChange }: SafetyGuardrailsProps) {
+  // Use parent-controlled initial state but manage internally
+  const [guardrails, setGuardrails] = __import_useState(INITIAL);
 
   const toggle = (id: string) => {
-    setGuardrails((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, enabled: !g.enabled } : g))
-    );
+    setGuardrails((prev) => {
+      const updated = prev.map((g) => (g.id === id ? { ...g, enabled: !g.enabled } : g));
+      if (id === "auto-rollback") {
+        const rollback = updated.find((g) => g.id === "auto-rollback");
+        onRollbackChange?.(rollback?.enabled ?? false);
+      }
+      return updated;
+    });
   };
 
   return (
