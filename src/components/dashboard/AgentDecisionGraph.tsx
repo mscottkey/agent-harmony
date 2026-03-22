@@ -76,6 +76,7 @@ interface AgentDecisionGraphProps {
   semanticGateEnabled?: boolean;
   onEscalationClick?: () => void;
   intentLayerVisible?: boolean;
+  missionPoliciesActive?: boolean;
 }
 
 const PENDING_PAYLOAD = `{
@@ -91,7 +92,7 @@ const PENDING_PAYLOAD = `{
   "routing": "senior_ops"
 }`;
 
-export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanticGateEnabled = false, onEscalationClick, intentLayerVisible = false }: AgentDecisionGraphProps) {
+export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanticGateEnabled = false, onEscalationClick, intentLayerVisible = false, missionPoliciesActive = false }: AgentDecisionGraphProps) {
   const { alertCriticalDrift } = useDriftNotifications();
   const [nodes, setNodes] = useState(INITIAL_NODES);
   const [selected, setSelected] = useState<GraphNode | null>(null);
@@ -190,6 +191,20 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
         { nodeId: "2", message: "Lead qualified as enterprise tier", status: "success" as NodeStatus },
         { nodeId: "5", message: "Attempting drift remediation...", status: "running" as NodeStatus },
       ];
+
+      // Inject semantic drift alerts when mission policies are active
+      if (missionPoliciesActive) {
+        const driftingNodes = nodes.filter((n) => n.driftScore < 70);
+        if (driftingNodes.length > 0) {
+          const dNode = driftingNodes[Math.floor(Math.random() * driftingNodes.length)];
+          eventMessages.push({
+            nodeId: dNode.id,
+            message: `⚠ Semantic Drift: ${dNode.label} alignment at ${dNode.driftScore}% — workflow paused`,
+            status: "critical" as NodeStatus,
+          });
+        }
+      }
+
       const evt = eventMessages[Math.floor(Math.random() * eventMessages.length)];
       setEventCounter((c) => c + 1);
       setEvents((prev) => [{ ...evt, id: eventCounter, timestamp: new Date() }, ...prev].slice(0, 5));
@@ -198,7 +213,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, [paused, eventCounter]);
+  }, [paused, eventCounter, missionPoliciesActive, nodes]);
 
   // Keep selected node in sync
   useEffect(() => {
@@ -314,7 +329,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                 ))}
               </g>
             )}
-            {/* Edges with animated particles */}
+            {/* Edges with animated particles and Goal Alignment meters */}
             {nodes.map((node) =>
               node.children.map((childId) => {
                 const child = nodeMap[childId];
@@ -324,6 +339,12 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                 const progress = ((particleTick * 1.5) % 100) / 100;
                 const px = x1 + (x2 - x1) * progress;
                 const py = y1 + (y2 - y1) * progress;
+
+                // Goal alignment = average of parent+child drift scores
+                const goalAlignment = Math.round((node.driftScore + child.driftScore) / 2);
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                const isLowAlignment = goalAlignment < 70;
 
                 return (
                   <g key={`${node.id}-${childId}`}>
@@ -340,6 +361,29 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                         fill={lineColor[targetStatus]}
                         opacity={0.8}
                       />
+                    )}
+                    {/* Goal Alignment Meter on handoff lines */}
+                    {missionPoliciesActive && (
+                      <g>
+                        <rect
+                          x={midX - 22} y={midY - 8}
+                          width={44} height={16} rx={8}
+                          fill={isLowAlignment ? "hsl(0, 72%, 55%)" : goalAlignment < 85 ? "hsl(38, 92%, 55%)" : "hsl(152, 60%, 48%)"}
+                          fillOpacity={0.2}
+                          stroke={isLowAlignment ? "hsl(0, 72%, 55%)" : goalAlignment < 85 ? "hsl(38, 92%, 55%)" : "hsl(152, 60%, 48%)"}
+                          strokeOpacity={0.5}
+                          strokeWidth={1}
+                          className={isLowAlignment ? "animate-pulse" : ""}
+                        />
+                        <text
+                          x={midX} y={midY + 3}
+                          textAnchor="middle"
+                          fill={isLowAlignment ? "hsl(0, 72%, 55%)" : goalAlignment < 85 ? "hsl(38, 92%, 55%)" : "hsl(152, 60%, 48%)"}
+                          className="text-[7px] font-mono font-bold"
+                        >
+                          🎯{goalAlignment}%
+                        </text>
+                      </g>
                     )}
                   </g>
                 );
@@ -372,7 +416,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                 <rect
                   x={node.x - 80} y={node.y}
                   width={160} height={68} rx={8}
-                  className={`${statusColors[node.status]} stroke-[1.5] transition-all duration-500 ${node.status === "critical" ? "node-pulse" : ""} ${node.status === "pending" ? "animate-pulse" : ""}`}
+                  className={`${statusColors[node.status]} stroke-[1.5] transition-all duration-500 ${node.status === "critical" ? "node-pulse" : ""} ${node.status === "pending" ? "animate-pulse" : ""} ${missionPoliciesActive && node.status === "running" ? "vibe-glow" : ""}`}
                 />
                 <text x={node.x} y={node.y + 16} textAnchor="middle" className="fill-foreground text-[11px] font-medium">
                   {node.label}

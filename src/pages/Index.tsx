@@ -12,13 +12,14 @@ import GovernanceVault from "@/components/dashboard/GovernanceVault";
 import PredictiveDrift from "@/components/dashboard/PredictiveDrift";
 import OrchestrationROI from "@/components/dashboard/OrchestrationROI";
 import AgentStabilityIndex from "@/components/dashboard/AgentStabilityIndex";
+import IntentStudio from "@/components/dashboard/IntentStudio";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Shield, CheckCircle } from "lucide-react";
 import type { SimResult } from "@/components/dashboard/DriftSimulator";
 
-type ViewMode = "monitoring" | "hardening" | "vault";
+type ViewMode = "monitoring" | "hardening" | "vault" | "intent-studio";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export default function Index() {
   const [viewMode, setViewMode] = useState<ViewMode>("monitoring");
   const [canaryActive, setCanaryActive] = useState(false);
   const [intentLayerVisible, setIntentLayerVisible] = useState(false);
+  const [missionPoliciesActive, setMissionPoliciesActive] = useState(false);
 
   const handleSimulationComplete = useCallback((result: SimResult) => {
     setSimResult(result);
@@ -149,6 +151,19 @@ export default function Index() {
             </span>
           </button>
           <button
+            onClick={() => setViewMode("intent-studio")}
+            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+              viewMode === "intent-studio"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            🧠 Intent Studio
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+              NEW
+            </span>
+          </button>
+          <button
             onClick={() => navigate("/discovery")}
             className="px-4 py-2.5 text-xs font-medium transition-all border-b-2 border-transparent text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
           >
@@ -179,6 +194,7 @@ export default function Index() {
                 semanticGateEnabled={semanticGate}
                 onEscalationClick={() => setRcaModalOpen(true)}
                 intentLayerVisible={intentLayerVisible}
+                missionPoliciesActive={missionPoliciesActive}
               />
             </div>
             <DriftSimulator onSimulationComplete={handleSimulationComplete} />
@@ -221,6 +237,16 @@ export default function Index() {
                 onIntentLockChange={setIntentLock}
               />
             </div>
+          </div>
+        ) : viewMode === "intent-studio" ? (
+          <div className="space-y-4 animate-fade-in">
+            <IntentStudio
+              onPoliciesUpdate={(policies) => {
+                if (Object.keys(policies).length > 0) {
+                  setMissionPoliciesActive(true);
+                }
+              }}
+            />
           </div>
         ) : (
           <div className="space-y-4 animate-fade-in">
