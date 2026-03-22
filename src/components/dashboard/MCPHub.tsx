@@ -112,7 +112,10 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
     );
   };
 
+  const [logicModal, setLogicModal] = useState<SelectedAgentLogic>(null);
+
   return (
+    <>
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -172,6 +175,27 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
                 </Badge>
               </div>
             </div>
+
+            {/* Semantic Mission Badges */}
+            {agent.semanticMission && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge
+                  variant="outline"
+                  className="text-[9px] bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20 transition-colors"
+                  onClick={() => setLogicModal(agent)}
+                >
+                  🎯 Role: {agent.semanticMission}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="text-[9px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 cursor-pointer hover:bg-drift-warning/20 transition-colors"
+                  onClick={() => setLogicModal(agent)}
+                >
+                  🔒 {agent.constraint}
+                </Badge>
+              </div>
+            )}
+
             <div className="grid grid-cols-4 gap-2 text-center items-center">
               <div>
                 <div className="text-xs font-mono font-medium">{agent.protocol}</div>
@@ -205,5 +229,42 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
         ))}
       </CardContent>
     </Card>
+
+    {/* Extracted Logic Modal */}
+    <Dialog open={!!logicModal} onOpenChange={(o) => !o && setLogicModal(null)}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            <span className="text-lg">{logicModal?.icon}</span>
+            Extracted Logic: {logicModal?.name}
+          </DialogTitle>
+        </DialogHeader>
+        {logicModal && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div className="text-[9px] font-mono text-muted-foreground uppercase mb-1">Semantic Mission</div>
+              <div className="text-sm font-medium text-primary">{logicModal.semanticMission}</div>
+            </div>
+            <div className="rounded-lg border border-drift-warning/20 bg-drift-warning/5 p-3">
+              <div className="text-[9px] font-mono text-muted-foreground uppercase mb-1">Constraint Boundary</div>
+              <div className="flex items-center gap-2">
+                <Shield className="w-3 h-3 text-drift-warning" />
+                <span className="text-sm text-drift-warning">{logicModal.constraint}</span>
+              </div>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1.5">
+              <div className="text-[9px] font-mono text-muted-foreground uppercase">Permitted Tool Chains</div>
+              {logicModal.permittedTools?.map((tool) => (
+                <div key={tool} className="flex items-center gap-2 text-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-drift-success shrink-0" />
+                  <code className="font-mono text-[10px] text-foreground bg-muted px-1.5 py-0.5 rounded">{tool}</code>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
