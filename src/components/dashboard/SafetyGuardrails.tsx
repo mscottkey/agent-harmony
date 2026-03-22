@@ -98,6 +98,11 @@ export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChang
                     🛡️ SHIELDED
                   </Badge>
                 )}
+                {g.id === "intent-lock" && g.enabled && (
+                  <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/30 animate-pulse">
+                    🔐 ENFORCING
+                  </Badge>
+                )}
               </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed">{g.description}</p>
             </div>
