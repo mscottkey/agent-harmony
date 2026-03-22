@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import AgentDecisionGraph from "@/components/dashboard/AgentDecisionGraph";
 import DriftSimulator from "@/components/dashboard/DriftSimulator";
 import MCPHub from "@/components/dashboard/MCPHub";
@@ -10,23 +11,28 @@ import PipelineHardening from "@/components/dashboard/PipelineHardening";
 import GovernanceVault from "@/components/dashboard/GovernanceVault";
 import PredictiveDrift from "@/components/dashboard/PredictiveDrift";
 import OrchestrationROI from "@/components/dashboard/OrchestrationROI";
+import AgentStabilityIndex from "@/components/dashboard/AgentStabilityIndex";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Shield, CheckCircle } from "lucide-react";
 import type { SimResult } from "@/components/dashboard/DriftSimulator";
 
 type ViewMode = "monitoring" | "hardening" | "vault";
 
 export default function Index() {
+  const navigate = useNavigate();
   const [simResult, setSimResult] = useState<SimResult | null>(null);
   const [simulationPeak, setSimulationPeak] = useState<number | null>(null);
   const [autoRollback, setAutoRollback] = useState(true);
   const [semanticGate, setSemanticGate] = useState(false);
   const [piiRedaction, setPiiRedaction] = useState(false);
+  const [intentLock, setIntentLock] = useState(false);
   const [rcaModalOpen, setRcaModalOpen] = useState(false);
   const [driftAlert, setDriftAlert] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("monitoring");
   const [canaryActive, setCanaryActive] = useState(false);
+  const [intentLayerVisible, setIntentLayerVisible] = useState(false);
 
   const handleSimulationComplete = useCallback((result: SimResult) => {
     setSimResult(result);
@@ -142,6 +148,15 @@ export default function Index() {
               NIST
             </span>
           </button>
+          <button
+            onClick={() => navigate("/discovery")}
+            className="px-4 py-2.5 text-xs font-medium transition-all border-b-2 border-transparent text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+          >
+            🔬 Discovery Lab
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-drift-success/10 text-drift-success border border-drift-success/20">
+              NEW
+            </span>
+          </button>
         </div>
       </div>
 
@@ -149,22 +164,35 @@ export default function Index() {
       <main className="max-w-[1600px] mx-auto p-4 sm:p-6 flex-1">
         {viewMode === "monitoring" ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 auto-rows-min">
+            {/* Intent Layer Toggle */}
+            <div className="lg:col-span-3 flex items-center gap-3 rounded-lg border border-drift-success/20 bg-drift-success/5 px-4 py-2">
+              <span className="text-[10px] font-mono text-drift-success uppercase tracking-wider">🎯 Intent Layer</span>
+              <Switch checked={intentLayerVisible} onCheckedChange={setIntentLayerVisible} />
+              <span className="text-[10px] text-muted-foreground">
+                {intentLayerVisible ? "Golden Path overlay active — deviations highlighted as Semantic Drift" : "Toggle to show Golden Path overlay on Decision Graph"}
+              </span>
+            </div>
+
             <div className="lg:col-span-2 lg:row-span-2">
               <AgentDecisionGraph
                 autoRollbackEnabled={autoRollback}
                 semanticGateEnabled={semanticGate}
                 onEscalationClick={() => setRcaModalOpen(true)}
+                intentLayerVisible={intentLayerVisible}
               />
             </div>
             <DriftSimulator onSimulationComplete={handleSimulationComplete} />
 
             <PredictiveDrift canaryActive={canaryActive} />
             <DriftAnalytics simulationPeak={simulationPeak} canaryActive={canaryActive} />
+
+            <AgentStabilityIndex canaryActive={canaryActive} />
+
             <div className="lg:col-span-2">
               <MCPHub onCanaryChange={setCanaryActive} />
             </div>
 
-            <OrchestrationROI />
+            <OrchestrationROI intentLockActive={intentLock} />
 
             <div className="lg:col-span-3">
               <DriftTimeline />
@@ -174,6 +202,7 @@ export default function Index() {
                 onRollbackChange={setAutoRollback}
                 onSemanticGateChange={setSemanticGate}
                 onPiiRedactionChange={setPiiRedaction}
+                onIntentLockChange={setIntentLock}
               />
             </div>
           </div>
@@ -189,6 +218,7 @@ export default function Index() {
                 onRollbackChange={setAutoRollback}
                 onSemanticGateChange={setSemanticGate}
                 onPiiRedactionChange={setPiiRedaction}
+                onIntentLockChange={setIntentLock}
               />
             </div>
           </div>

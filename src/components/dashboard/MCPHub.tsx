@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Shield } from "lucide-react";
 
 interface AgentCard {
   name: string;
@@ -13,12 +16,15 @@ interface AgentCard {
   version: string;
   requests: number;
   versions?: string[];
+  semanticMission?: string;
+  constraint?: string;
+  permittedTools?: string[];
 }
 
 const INITIAL_AGENTS: AgentCard[] = [
-  { name: "Salesforce", protocol: "A2A v1.2", latency: 42, successRate: 99.2, status: "connected", icon: "☁️", version: "v3.1.0", requests: 1847, versions: ["v3.1.0 (Stable)", "v3.2.0-beta (Canary)"] },
-  { name: "Zendesk", protocol: "A2A v1.1", latency: 78, successRate: 97.8, status: "connected", icon: "🎧", version: "v2.4.2", requests: 923 },
-  { name: "ChurnZero", protocol: "A2A v1.0", latency: 156, successRate: 91.4, status: "degraded", icon: "📊", version: "v1.8.1", requests: 412 },
+  { name: "Salesforce", protocol: "A2A v1.2", latency: 42, successRate: 99.2, status: "connected", icon: "☁️", version: "v3.1.0", requests: 1847, versions: ["v3.1.0 (Stable)", "v3.2.0-beta (Canary)"], semanticMission: "Lead Qualification & Pipeline Routing", constraint: "Read-Write (CRM Only)", permittedTools: ["lead.score", "lead.qualify", "opportunity.create", "pipeline.route"] },
+  { name: "Zendesk", protocol: "A2A v1.1", latency: 78, successRate: 97.8, status: "connected", icon: "🎧", version: "v2.4.2", requests: 923, semanticMission: "Service Recovery", constraint: "Read-Only (Billing)", permittedTools: ["ticket.create", "ticket.escalate", "ticket.resolve", "macro.apply"] },
+  { name: "ChurnZero", protocol: "A2A v1.0", latency: 156, successRate: 91.4, status: "degraded", icon: "📊", version: "v1.8.1", requests: 412, semanticMission: "Retention Intelligence", constraint: "Read-Only (No Direct Contact)", permittedTools: ["churn.predict", "health.score", "segment.analyze", "alert.trigger"] },
 ];
 
 const statusStyle: Record<string, string> = {
@@ -34,6 +40,8 @@ function jitter(base: number, range: number) {
 interface MCPHubProps {
   onCanaryChange?: (active: boolean) => void;
 }
+
+type SelectedAgentLogic = AgentCard | null;
 
 export default function MCPHub({ onCanaryChange }: MCPHubProps) {
   const [agents, setAgents] = useState(INITIAL_AGENTS);
@@ -103,7 +111,10 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
     );
   };
 
+  const [logicModal, setLogicModal] = useState<SelectedAgentLogic>(null);
+
   return (
+    <>
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -163,6 +174,27 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
                 </Badge>
               </div>
             </div>
+
+            {/* Semantic Mission Badges */}
+            {agent.semanticMission && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge
+                  variant="outline"
+                  className="text-[9px] bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20 transition-colors"
+                  onClick={() => setLogicModal(agent)}
+                >
+                  🎯 Role: {agent.semanticMission}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="text-[9px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 cursor-pointer hover:bg-drift-warning/20 transition-colors"
+                  onClick={() => setLogicModal(agent)}
+                >
+                  🔒 {agent.constraint}
+                </Badge>
+              </div>
+            )}
+
             <div className="grid grid-cols-4 gap-2 text-center items-center">
               <div>
                 <div className="text-xs font-mono font-medium">{agent.protocol}</div>
@@ -196,5 +228,42 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
         ))}
       </CardContent>
     </Card>
+
+    {/* Extracted Logic Modal */}
+    <Dialog open={!!logicModal} onOpenChange={(o) => !o && setLogicModal(null)}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            <span className="text-lg">{logicModal?.icon}</span>
+            Extracted Logic: {logicModal?.name}
+          </DialogTitle>
+        </DialogHeader>
+        {logicModal && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div className="text-[9px] font-mono text-muted-foreground uppercase mb-1">Semantic Mission</div>
+              <div className="text-sm font-medium text-primary">{logicModal.semanticMission}</div>
+            </div>
+            <div className="rounded-lg border border-drift-warning/20 bg-drift-warning/5 p-3">
+              <div className="text-[9px] font-mono text-muted-foreground uppercase mb-1">Constraint Boundary</div>
+              <div className="flex items-center gap-2">
+                <Shield className="w-3 h-3 text-drift-warning" />
+                <span className="text-sm text-drift-warning">{logicModal.constraint}</span>
+              </div>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1.5">
+              <div className="text-[9px] font-mono text-muted-foreground uppercase">Permitted Tool Chains</div>
+              {logicModal.permittedTools?.map((tool) => (
+                <div key={tool} className="flex items-center gap-2 text-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-drift-success shrink-0" />
+                  <code className="font-mono text-[10px] text-foreground bg-muted px-1.5 py-0.5 rounded">{tool}</code>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

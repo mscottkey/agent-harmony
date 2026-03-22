@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingDown, Clock, Zap } from "lucide-react";
+import { TrendingDown, Clock, Zap, ShieldAlert } from "lucide-react";
 
 const SPARKLINE_DATA = [82, 76, 71, 68, 59, 54, 48, 42, 38, 35, 31, 28];
 
-export default function OrchestrationROI() {
+interface OrchestrationROIProps {
+  intentLockActive?: boolean;
+}
+
+export default function OrchestrationROI({ intentLockActive }: OrchestrationROIProps) {
   const [animatedMTTR, setAnimatedMTTR] = useState(0);
   const [animatedToil, setAnimatedToil] = useState(0);
 
@@ -96,6 +100,25 @@ export default function OrchestrationROI() {
             </div>
           </div>
         </div>
+
+        {/* Waste Prevented by Intent Lock */}
+        {intentLockActive && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 animate-fade-in">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5">
+                <ShieldAlert className="w-3 h-3 text-primary" />
+                <span className="text-[9px] font-mono text-muted-foreground uppercase">Waste Prevented (Intent Lock)</span>
+              </div>
+              <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/30">
+                🔐 ACTIVE
+              </Badge>
+            </div>
+            <div className="text-xl font-bold text-primary">$1,840</div>
+            <p className="text-[9px] text-muted-foreground mt-0.5">
+              3 unauthorized agent loops blocked · 847 wasted tokens prevented this session
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

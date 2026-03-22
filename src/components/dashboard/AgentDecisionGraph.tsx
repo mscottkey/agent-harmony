@@ -75,6 +75,7 @@ interface AgentDecisionGraphProps {
   autoRollbackEnabled?: boolean;
   semanticGateEnabled?: boolean;
   onEscalationClick?: () => void;
+  intentLayerVisible?: boolean;
 }
 
 const PENDING_PAYLOAD = `{
@@ -90,7 +91,7 @@ const PENDING_PAYLOAD = `{
   "routing": "senior_ops"
 }`;
 
-export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanticGateEnabled = false, onEscalationClick }: AgentDecisionGraphProps) {
+export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanticGateEnabled = false, onEscalationClick, intentLayerVisible = false }: AgentDecisionGraphProps) {
   const { alertCriticalDrift } = useDriftNotifications();
   const [nodes, setNodes] = useState(INITIAL_NODES);
   const [selected, setSelected] = useState<GraphNode | null>(null);
@@ -266,6 +267,53 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
       <CardContent className="p-0">
         <div className="relative overflow-x-auto">
           <svg width="780" height="430" className="w-full" viewBox="0 0 780 430">
+            {/* Golden Path Overlay */}
+            {intentLayerVisible && (
+              <g opacity={0.5}>
+                {/* Golden path: 1→2→4→6 */}
+                {[
+                  { x1: 400, y1: 74, x2: 220, y2: 140 },
+                  { x1: 220, y1: 174, x2: 220, y2: 240 },
+                  { x1: 220, y1: 274, x2: 140, y2: 340 },
+                ].map((line, i) => (
+                  <line
+                    key={`golden-${i}`}
+                    x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2}
+                    stroke="hsl(152, 60%, 48%)"
+                    strokeWidth={3}
+                    strokeDasharray="8 4"
+                    strokeOpacity={0.5}
+                  />
+                ))}
+                {/* Semantic Drift alert lines: 1→3→5→7 */}
+                {[
+                  { x1: 400, y1: 74, x2: 580, y2: 140 },
+                  { x1: 580, y1: 174, x2: 580, y2: 240 },
+                  { x1: 580, y1: 274, x2: 580, y2: 340 },
+                ].map((line, i) => (
+                  <g key={`drift-${i}`}>
+                    <line
+                      x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2}
+                      stroke="hsl(0, 72%, 55%)"
+                      strokeWidth={2.5}
+                      strokeDasharray="3 3"
+                      strokeOpacity={0.6}
+                    />
+                    {i > 0 && (
+                      <text
+                        x={(line.x1 + line.x2) / 2 + 12}
+                        y={(line.y1 + line.y2) / 2}
+                        fill="hsl(0, 72%, 55%)"
+                        className="text-[7px] font-mono font-bold"
+                        textAnchor="start"
+                      >
+                        ⚠ DRIFT
+                      </text>
+                    )}
+                  </g>
+                ))}
+              </g>
+            )}
             {/* Edges with animated particles */}
             {nodes.map((node) =>
               node.children.map((childId) => {

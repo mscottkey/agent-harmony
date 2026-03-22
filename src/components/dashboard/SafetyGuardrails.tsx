@@ -8,7 +8,7 @@ interface Guardrail {
   label: string;
   description: string;
   enabled: boolean;
-  type: "rollback" | "escalation" | "verification" | "privacy";
+  type: "rollback" | "escalation" | "verification" | "privacy" | "intent";
 }
 
 const INITIAL: Guardrail[] = [
@@ -16,6 +16,7 @@ const INITIAL: Guardrail[] = [
   { id: "hitl", label: "Human-in-the-Loop Gate", description: "Require human approval for cross-platform handoffs", enabled: false, type: "escalation" },
   { id: "semantic-gate", label: "Semantic Verification Gate", description: "On context mismatch, pause execution and require human payload review before forwarding to target agent", enabled: false, type: "verification" },
   { id: "pii-redaction", label: "MCP PII Redaction Layer", description: "Automatically redact personally identifiable information in trace data, payloads, and diagnostic views", enabled: false, type: "privacy" },
+  { id: "intent-lock", label: "Semantic Intent Locking", description: "Auto-block any agent action not identified during Discovery Scan. Unauthorized actions (e.g., Zendesk modifying billing) are flagged and prevented.", enabled: false, type: "intent" },
   { id: "context-check", label: "Context Integrity Check", description: "Validate MCP payload completeness before handoff", enabled: true, type: "rollback" },
   { id: "escalation-path", label: "Escalation Path Override", description: "Route critical drift events to senior ops team", enabled: false, type: "escalation" },
 ];
@@ -25,15 +26,17 @@ const typeLabels: Record<string, string> = {
   escalation: "🧑 HITL",
   verification: "🔍 Verification",
   privacy: "🛡️ Privacy",
+  intent: "🔐 Zero-Trust",
 };
 
 interface SafetyGuardrailsProps {
   onRollbackChange?: (enabled: boolean) => void;
   onSemanticGateChange?: (enabled: boolean) => void;
   onPiiRedactionChange?: (enabled: boolean) => void;
+  onIntentLockChange?: (enabled: boolean) => void;
 }
 
-export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChange, onPiiRedactionChange }: SafetyGuardrailsProps) {
+export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChange, onPiiRedactionChange, onIntentLockChange }: SafetyGuardrailsProps) {
   const [guardrails, setGuardrails] = useState(INITIAL);
 
   const toggle = (id: string) => {
@@ -50,6 +53,10 @@ export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChang
       if (id === "pii-redaction") {
         const pii = updated.find((g) => g.id === "pii-redaction");
         onPiiRedactionChange?.(pii?.enabled ?? false);
+      }
+      if (id === "intent-lock") {
+        const intent = updated.find((g) => g.id === "intent-lock");
+        onIntentLockChange?.(intent?.enabled ?? false);
       }
       return updated;
     });
@@ -72,7 +79,8 @@ export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChang
             className={`flex items-start justify-between gap-3 rounded-lg border p-3 transition-all ${
               g.enabled ? "border-primary/20 bg-primary/5" : "border-border bg-card"
             } ${g.id === "semantic-gate" && g.enabled ? "border-drift-warning/30 bg-drift-warning/5" : ""}
-            ${g.id === "pii-redaction" && g.enabled ? "border-drift-info/30 bg-drift-info/5" : ""}`}
+            ${g.id === "pii-redaction" && g.enabled ? "border-drift-info/30 bg-drift-info/5" : ""}
+            ${g.id === "intent-lock" && g.enabled ? "border-primary/30 bg-primary/5" : ""}`}
           >
             <div className="space-y-0.5 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -88,6 +96,11 @@ export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChang
                 {g.id === "pii-redaction" && g.enabled && (
                   <Badge variant="outline" className="text-[9px] bg-drift-info/10 text-drift-info border-drift-info/30">
                     🛡️ SHIELDED
+                  </Badge>
+                )}
+                {g.id === "intent-lock" && g.enabled && (
+                  <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/30 animate-pulse">
+                    🔐 ENFORCING
                   </Badge>
                 )}
               </div>
