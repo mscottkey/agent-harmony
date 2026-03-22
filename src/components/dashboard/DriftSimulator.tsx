@@ -11,14 +11,18 @@ const PERSONAS = [
   { id: "churn", label: "Silent Churner", risk: "High", icon: "👻" },
 ];
 
-interface SimResult {
+export interface SimResult {
   passed: number;
   failed: number;
   driftPoints: string[];
   avgLatency: number;
 }
 
-export default function DriftSimulator() {
+interface DriftSimulatorProps {
+  onSimulationComplete?: (result: SimResult) => void;
+}
+
+export default function DriftSimulator({ onSimulationComplete }: DriftSimulatorProps) {
   const [persona, setPersona] = useState(PERSONAS[0]);
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -33,19 +37,22 @@ export default function DriftSimulator() {
   useEffect(() => {
     if (!running) return;
     if (progress >= 100) {
-      const failed = Math.floor(Math.random() * 18) + 3;
-      setResult({
+      const failed = Math.floor(Math.random() * 5) + 3; // 3-7 failures for realistic results
+      const simResult: SimResult = {
         passed: 50 - failed,
         failed,
         driftPoints: ["MCP Handoff → Zendesk", "Retention Trigger", "Churn Risk Check"].slice(0, Math.floor(Math.random() * 3) + 1),
         avgLatency: Math.floor(Math.random() * 200) + 80,
-      });
+      };
+      setResult(simResult);
       setRunning(false);
+      onSimulationComplete?.(simResult);
       return;
     }
-    const timer = setTimeout(() => setProgress((p) => Math.min(p + Math.random() * 8 + 2, 100)), 60);
+    // ~3 seconds total: progress increments of ~3.3% every 60ms ≈ 50 steps
+    const timer = setTimeout(() => setProgress((p) => Math.min(p + Math.random() * 4 + 1.5, 100)), 60);
     return () => clearTimeout(timer);
-  }, [running, progress]);
+  }, [running, progress, onSimulationComplete]);
 
   return (
     <Card>
