@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, CheckCircle, Loader2, Shield, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Search, CheckCircle, Loader2, Shield } from "lucide-react";
 
 interface LogEntry {
   message: string;
@@ -73,7 +72,6 @@ const SCAN_LOGS: { message: string; type: "info" | "success" | "warning"; delay:
 ];
 
 export default function DiscoveryLab() {
-  const navigate = useNavigate();
   const [scanning, setScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -115,32 +113,7 @@ export default function DiscoveryLab() {
   }, [logs]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border px-4 sm:px-6 py-4">
-        <div className="flex items-center justify-between max-w-[1600px] mx-auto">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => navigate("/")}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Search className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-sm font-semibold tracking-tight">Discovery Lab</h1>
-              <p className="text-[10px] text-muted-foreground font-mono">Intent Extraction & Behavioral Baselining</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {scanComplete && (
-              <Badge variant="outline" className="text-[10px] bg-drift-success/10 text-drift-success border-drift-success/30 animate-fade-in">
-                <CheckCircle className="w-3 h-3 mr-1" /> All Baselines Locked
-              </Badge>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-[1600px] mx-auto p-4 sm:p-6 flex-1 space-y-4">
+    <div className="space-y-4 animate-fade-in">
         {/* Scan Control */}
         <Card>
           <CardHeader className="pb-3">
@@ -310,23 +283,6 @@ export default function DiscoveryLab() {
             </CardContent>
           </Card>
         )}
-      </main>
-
-      {/* Compliance Footer */}
-      <footer className="border-t border-border bg-muted/20 px-4 sm:px-6 py-3">
-        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-drift-success" />
-              <span className="text-[10px] font-semibold text-drift-success">Compliance Certified</span>
-            </div>
-            <span className="text-[9px] text-muted-foreground">·</span>
-            <span className="text-[9px] font-mono text-muted-foreground">NIST AI 800-4</span>
-            <span className="text-[9px] text-muted-foreground">·</span>
-            <span className="text-[9px] font-mono text-muted-foreground">EU AI Act Ready</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

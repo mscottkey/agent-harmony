@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import DiscoveryLab from "@/pages/DiscoveryLab";
 import AgentDecisionGraph from "@/components/dashboard/AgentDecisionGraph";
 import DriftSimulator from "@/components/dashboard/DriftSimulator";
 import MCPHub from "@/components/dashboard/MCPHub";
@@ -19,10 +19,9 @@ import { Switch } from "@/components/ui/switch";
 import { Shield, CheckCircle } from "lucide-react";
 import type { SimResult } from "@/components/dashboard/DriftSimulator";
 
-type ViewMode = "monitoring" | "hardening" | "vault" | "intent-studio";
+type ViewMode = "monitoring" | "hardening" | "vault" | "intent-studio" | "discovery";
 
 export default function Index() {
-  const navigate = useNavigate();
   const [simResult, setSimResult] = useState<SimResult | null>(null);
   const [simulationPeak, setSimulationPeak] = useState<number | null>(null);
   const [autoRollback, setAutoRollback] = useState(true);
@@ -164,8 +163,12 @@ export default function Index() {
             </span>
           </button>
           <button
-            onClick={() => navigate("/discovery")}
-            className="px-4 py-2.5 text-xs font-medium transition-all border-b-2 border-transparent text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            onClick={() => setViewMode("discovery")}
+            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+              viewMode === "discovery"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
           >
             🔬 Discovery Lab
             <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-drift-success/10 text-drift-success border border-drift-success/20">
@@ -247,6 +250,10 @@ export default function Index() {
                 }
               }}
             />
+          </div>
+        ) : viewMode === "discovery" ? (
+          <div className="space-y-4 animate-fade-in">
+            <DiscoveryLab />
           </div>
         ) : (
           <div className="space-y-4 animate-fade-in">
