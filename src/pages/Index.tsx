@@ -252,6 +252,10 @@ export default function Index() {
               }}
             />
           </div>
+        ) : viewMode === "discovery" ? (
+          <div className="space-y-4 animate-fade-in">
+            <DiscoveryLab />
+          </div>
         ) : (
           <div className="space-y-4 animate-fade-in">
             <GovernanceVault />
