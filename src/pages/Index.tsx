@@ -9,8 +9,10 @@ import DriftTimeline from "@/components/dashboard/DriftTimeline";
 import PipelineHardening from "@/components/dashboard/PipelineHardening";
 import GovernanceVault from "@/components/dashboard/GovernanceVault";
 import PredictiveDrift from "@/components/dashboard/PredictiveDrift";
+import OrchestrationROI from "@/components/dashboard/OrchestrationROI";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Shield, CheckCircle } from "lucide-react";
 import type { SimResult } from "@/components/dashboard/DriftSimulator";
 
 type ViewMode = "monitoring" | "hardening" | "vault";
@@ -20,6 +22,7 @@ export default function Index() {
   const [simulationPeak, setSimulationPeak] = useState<number | null>(null);
   const [autoRollback, setAutoRollback] = useState(true);
   const [semanticGate, setSemanticGate] = useState(false);
+  const [piiRedaction, setPiiRedaction] = useState(false);
   const [rcaModalOpen, setRcaModalOpen] = useState(false);
   const [driftAlert, setDriftAlert] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("monitoring");
@@ -42,7 +45,7 @@ export default function Index() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Simulation Failure Banner */}
       {simResult && simResult.failed > 0 && (
         <div className="bg-drift-critical/10 border-b border-drift-critical/20 px-4 sm:px-6 py-2.5 animate-fade-in">
@@ -143,7 +146,7 @@ export default function Index() {
       </div>
 
       {/* Dashboard Grid */}
-      <main className="max-w-[1600px] mx-auto p-4 sm:p-6">
+      <main className="max-w-[1600px] mx-auto p-4 sm:p-6 flex-1">
         {viewMode === "monitoring" ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 auto-rows-min">
             <div className="lg:col-span-2 lg:row-span-2">
@@ -161,6 +164,8 @@ export default function Index() {
               <MCPHub onCanaryChange={setCanaryActive} />
             </div>
 
+            <OrchestrationROI />
+
             <div className="lg:col-span-3">
               <DriftTimeline />
             </div>
@@ -168,6 +173,7 @@ export default function Index() {
               <SafetyGuardrails
                 onRollbackChange={setAutoRollback}
                 onSemanticGateChange={setSemanticGate}
+                onPiiRedactionChange={setPiiRedaction}
               />
             </div>
           </div>
@@ -182,6 +188,7 @@ export default function Index() {
               <SafetyGuardrails
                 onRollbackChange={setAutoRollback}
                 onSemanticGateChange={setSemanticGate}
+                onPiiRedactionChange={setPiiRedaction}
               />
             </div>
           </div>
@@ -192,11 +199,35 @@ export default function Index() {
         )}
       </main>
 
+      {/* Compliance Certified Footer */}
+      <footer className="border-t border-border bg-muted/20 px-4 sm:px-6 py-3">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-drift-success" />
+              <span className="text-[10px] font-semibold text-drift-success">Compliance Certified</span>
+            </div>
+            <span className="text-[9px] text-muted-foreground">·</span>
+            <span className="text-[9px] font-mono text-muted-foreground">NIST AI 800-4</span>
+            <span className="text-[9px] text-muted-foreground">·</span>
+            <span className="text-[9px] font-mono text-muted-foreground">EU AI Act Ready</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-3 h-3 text-drift-info" />
+            <span className="text-[9px] text-muted-foreground">Governed & safe for production data</span>
+            <Badge variant="outline" className="text-[8px] bg-drift-success/10 text-drift-success border-drift-success/20">
+              PRODUCTION
+            </Badge>
+          </div>
+        </div>
+      </footer>
+
       {/* RCA Diagnostic Modal */}
       <DriftDiagnosticModal
         open={rcaModalOpen}
         onOpenChange={setRcaModalOpen}
         onFixApplied={handleFixApplied}
+        piiRedactionEnabled={piiRedaction}
       />
     </div>
   );

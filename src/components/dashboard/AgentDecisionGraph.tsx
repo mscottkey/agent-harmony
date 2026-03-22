@@ -441,7 +441,9 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
             <span className="text-[10px] font-mono text-muted-foreground">{events.length} events</span>
           </div>
           <div className="px-4 pb-3 space-y-1.5 max-h-[120px] overflow-y-auto">
-            {events.map((evt, i) => (
+            {events.map((evt, i) => {
+              const isClaimed = (evt as any).claimedBy;
+              return (
               <div
                 key={evt.id}
                 className={`flex items-center gap-2 text-[10px] ${i === 0 ? "animate-fade-in-up" : ""}`}
@@ -452,9 +454,26 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                   evt.status === "warning" ? "bg-drift-warning" : "bg-primary"
                 }`} />
                 <span className="text-muted-foreground font-mono">{evt.timestamp.toLocaleTimeString()}</span>
-                <span className="text-foreground">{evt.message}</span>
+                <span className="text-foreground flex-1">{evt.message}</span>
+                {isClaimed ? (
+                  <span className="flex items-center gap-1 text-[9px] text-primary">
+                    <span className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[7px] font-bold text-primary">SC</span>
+                    In Progress
+                  </span>
+                ) : (evt.status === "critical" || evt.status === "warning") ? (
+                  <button
+                    className="text-[9px] text-muted-foreground hover:text-primary font-mono px-1.5 py-0.5 rounded border border-border hover:border-primary/30 transition-colors"
+                    onClick={() => {
+                      setEvents(prev => prev.map(e => e.id === evt.id ? { ...e, claimedBy: "SC" } as any : e));
+                      toast.success("Incident claimed", { description: `You are now investigating: ${evt.message}`, duration: 3000 });
+                    }}
+                  >
+                    Claim
+                  </button>
+                ) : null}
               </div>
-            ))}
+              );
+            })}
             {events.length === 0 && (
               <div className="text-[10px] text-muted-foreground italic">Waiting for events...</div>
             )}
