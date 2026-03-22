@@ -41,15 +41,15 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
   }, [canaryActive]);
 
   const avgScore = (scores.reduce((a, b) => a + b, 0) / scores.length * 100).toFixed(0);
-  const cx = 150, cy = 140, maxR = 110;
+  const cx = 180, cy = 160, maxR = 125;
 
   const points = scores.map((s, i) => {
     const angle = (Math.PI * 2 * i) / scores.length - Math.PI / 2;
     return {
       x: cx + Math.cos(angle) * maxR * s,
       y: cy + Math.sin(angle) * maxR * s,
-      lx: cx + Math.cos(angle) * (maxR + 16),
-      ly: cy + Math.sin(angle) * (maxR + 16),
+      lx: cx + Math.cos(angle) * (maxR + 28),
+      ly: cy + Math.sin(angle) * (maxR + 28),
       ax: cx + Math.cos(angle) * maxR,
       ay: cy + Math.sin(angle) * maxR,
     };
