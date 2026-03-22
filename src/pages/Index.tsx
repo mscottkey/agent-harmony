@@ -145,6 +145,9 @@ export default function Index() {
             </div>
 
             <div className="lg:col-span-3">
+              <DriftTimeline />
+            </div>
+            <div className="lg:col-span-3">
               <SafetyGuardrails
                 onRollbackChange={setAutoRollback}
                 onSemanticGateChange={setSemanticGate}
