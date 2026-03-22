@@ -297,7 +297,15 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                 );
               })
             )}
-            {nodes.map((node) => (
+            {nodes.map((node) => {
+              const regions: Record<string, string> = {
+                "Salesforce": "US-East-1",
+                "Zendesk": "US-East-1",
+                "ChurnZero": "EU-West-1",
+                "MCP Bridge": "US-East-1",
+              };
+              const region = regions[node.agent] || "US-East-1";
+              return (
               <g
                 key={node.id}
                 onClick={() => {
@@ -357,6 +365,24 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                     ⚠ semantic mismatch
                   </text>
                 )}
+                {/* Data Sovereignty badge */}
+                <rect
+                  x={node.x + 20} y={node.y - 14}
+                  width={62} height={12} rx={6}
+                  fill="hsl(200, 60%, 50%)"
+                  fillOpacity={0.12}
+                  stroke="hsl(200, 60%, 50%)"
+                  strokeOpacity={0.3}
+                  strokeWidth={0.8}
+                />
+                <text
+                  x={node.x + 51} y={node.y - 5}
+                  textAnchor="middle"
+                  fill="hsl(200, 60%, 55%)"
+                  className="text-[6px] font-mono"
+                >
+                  📍 {region}
+                </text>
                 {/* Auto-rollback "State Reverted" badge */}
                 {autoRollbackEnabled && node.status === "critical" && (
                   <g>
@@ -402,7 +428,8 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                   </g>
                 )}
               </g>
-            ))}
+              );
+            })}
           </svg>
         </div>
 
