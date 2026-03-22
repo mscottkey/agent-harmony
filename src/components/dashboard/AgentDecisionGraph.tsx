@@ -67,7 +67,12 @@ interface LiveEvent {
   timestamp: Date;
 }
 
-export default function AgentDecisionGraph() {
+interface AgentDecisionGraphProps {
+  autoRollbackEnabled?: boolean;
+  onEscalationClick?: () => void;
+}
+
+export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscalationClick }: AgentDecisionGraphProps) {
   const [nodes, setNodes] = useState(INITIAL_NODES);
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [events, setEvents] = useState<LiveEvent[]>([]);
