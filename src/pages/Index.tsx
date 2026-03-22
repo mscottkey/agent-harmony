@@ -14,6 +14,7 @@ import OrchestrationROI from "@/components/dashboard/OrchestrationROI";
 import AgentStabilityIndex from "@/components/dashboard/AgentStabilityIndex";
 import IntentStudio from "@/components/dashboard/IntentStudio";
 import EvaluatorPanel from "@/components/dashboard/EvaluatorPanel";
+import ExpandableCard from "@/components/dashboard/ExpandableCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
