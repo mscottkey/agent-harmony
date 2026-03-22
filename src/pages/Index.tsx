@@ -12,6 +12,7 @@ import GovernanceVault from "@/components/dashboard/GovernanceVault";
 import PredictiveDrift from "@/components/dashboard/PredictiveDrift";
 import OrchestrationROI from "@/components/dashboard/OrchestrationROI";
 import AgentStabilityIndex from "@/components/dashboard/AgentStabilityIndex";
+import IntentStudio from "@/components/dashboard/IntentStudio";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
