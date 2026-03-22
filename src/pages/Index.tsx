@@ -5,6 +5,7 @@ import MCPHub from "@/components/dashboard/MCPHub";
 import SafetyGuardrails from "@/components/dashboard/SafetyGuardrails";
 import DriftAnalytics from "@/components/dashboard/DriftAnalytics";
 import DriftDiagnosticModal from "@/components/dashboard/DriftDiagnosticModal";
+import DriftTimeline from "@/components/dashboard/DriftTimeline";
 import PipelineHardening from "@/components/dashboard/PipelineHardening";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -143,6 +144,9 @@ export default function Index() {
               <MCPHub />
             </div>
 
+            <div className="lg:col-span-3">
+              <DriftTimeline />
+            </div>
             <div className="lg:col-span-3">
               <SafetyGuardrails
                 onRollbackChange={setAutoRollback}
