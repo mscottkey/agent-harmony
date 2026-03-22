@@ -8,13 +8,14 @@ interface Guardrail {
   label: string;
   description: string;
   enabled: boolean;
-  type: "rollback" | "escalation" | "verification";
+  type: "rollback" | "escalation" | "verification" | "privacy";
 }
 
 const INITIAL: Guardrail[] = [
   { id: "auto-rollback", label: "Autonomous Rollback", description: "Automatically revert agent decisions when drift exceeds threshold", enabled: true, type: "rollback" },
   { id: "hitl", label: "Human-in-the-Loop Gate", description: "Require human approval for cross-platform handoffs", enabled: false, type: "escalation" },
   { id: "semantic-gate", label: "Semantic Verification Gate", description: "On context mismatch, pause execution and require human payload review before forwarding to target agent", enabled: false, type: "verification" },
+  { id: "pii-redaction", label: "MCP PII Redaction Layer", description: "Automatically redact personally identifiable information in trace data, payloads, and diagnostic views", enabled: false, type: "privacy" },
   { id: "context-check", label: "Context Integrity Check", description: "Validate MCP payload completeness before handoff", enabled: true, type: "rollback" },
   { id: "escalation-path", label: "Escalation Path Override", description: "Route critical drift events to senior ops team", enabled: false, type: "escalation" },
 ];
@@ -23,14 +24,16 @@ const typeLabels: Record<string, string> = {
   rollback: "🔄 Rollback",
   escalation: "🧑 HITL",
   verification: "🔍 Verification",
+  privacy: "🛡️ Privacy",
 };
 
 interface SafetyGuardrailsProps {
   onRollbackChange?: (enabled: boolean) => void;
   onSemanticGateChange?: (enabled: boolean) => void;
+  onPiiRedactionChange?: (enabled: boolean) => void;
 }
 
-export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChange }: SafetyGuardrailsProps) {
+export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChange, onPiiRedactionChange }: SafetyGuardrailsProps) {
   const [guardrails, setGuardrails] = useState(INITIAL);
 
   const toggle = (id: string) => {
@@ -43,6 +46,10 @@ export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChang
       if (id === "semantic-gate") {
         const gate = updated.find((g) => g.id === "semantic-gate");
         onSemanticGateChange?.(gate?.enabled ?? false);
+      }
+      if (id === "pii-redaction") {
+        const pii = updated.find((g) => g.id === "pii-redaction");
+        onPiiRedactionChange?.(pii?.enabled ?? false);
       }
       return updated;
     });
@@ -64,10 +71,11 @@ export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChang
             key={g.id}
             className={`flex items-start justify-between gap-3 rounded-lg border p-3 transition-all ${
               g.enabled ? "border-primary/20 bg-primary/5" : "border-border bg-card"
-            } ${g.id === "semantic-gate" && g.enabled ? "border-drift-warning/30 bg-drift-warning/5" : ""}`}
+            } ${g.id === "semantic-gate" && g.enabled ? "border-drift-warning/30 bg-drift-warning/5" : ""}
+            ${g.id === "pii-redaction" && g.enabled ? "border-drift-info/30 bg-drift-info/5" : ""}`}
           >
             <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-medium">{g.label}</span>
                 <Badge variant="outline" className="text-[9px] border-border">
                   {typeLabels[g.type] || g.type}
@@ -75,6 +83,11 @@ export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChang
                 {g.id === "semantic-gate" && g.enabled && (
                   <Badge variant="outline" className="text-[9px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 animate-pulse">
                     ACTIVE
+                  </Badge>
+                )}
+                {g.id === "pii-redaction" && g.enabled && (
+                  <Badge variant="outline" className="text-[9px] bg-drift-info/10 text-drift-info border-drift-info/30">
+                    🛡️ SHIELDED
                   </Badge>
                 )}
               </div>

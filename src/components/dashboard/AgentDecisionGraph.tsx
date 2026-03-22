@@ -297,7 +297,15 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                 );
               })
             )}
-            {nodes.map((node) => (
+            {nodes.map((node) => {
+              const regions: Record<string, string> = {
+                "Salesforce": "US-East-1",
+                "Zendesk": "US-East-1",
+                "ChurnZero": "EU-West-1",
+                "MCP Bridge": "US-East-1",
+              };
+              const region = regions[node.agent] || "US-East-1";
+              return (
               <g
                 key={node.id}
                 onClick={() => {
@@ -357,6 +365,24 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                     ⚠ semantic mismatch
                   </text>
                 )}
+                {/* Data Sovereignty badge */}
+                <rect
+                  x={node.x + 20} y={node.y - 14}
+                  width={62} height={12} rx={6}
+                  fill="hsl(200, 60%, 50%)"
+                  fillOpacity={0.12}
+                  stroke="hsl(200, 60%, 50%)"
+                  strokeOpacity={0.3}
+                  strokeWidth={0.8}
+                />
+                <text
+                  x={node.x + 51} y={node.y - 5}
+                  textAnchor="middle"
+                  fill="hsl(200, 60%, 55%)"
+                  className="text-[6px] font-mono"
+                >
+                  📍 {region}
+                </text>
                 {/* Auto-rollback "State Reverted" badge */}
                 {autoRollbackEnabled && node.status === "critical" && (
                   <g>
@@ -402,7 +428,8 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                   </g>
                 )}
               </g>
-            ))}
+              );
+            })}
           </svg>
         </div>
 
@@ -414,7 +441,9 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
             <span className="text-[10px] font-mono text-muted-foreground">{events.length} events</span>
           </div>
           <div className="px-4 pb-3 space-y-1.5 max-h-[120px] overflow-y-auto">
-            {events.map((evt, i) => (
+            {events.map((evt, i) => {
+              const isClaimed = (evt as any).claimedBy;
+              return (
               <div
                 key={evt.id}
                 className={`flex items-center gap-2 text-[10px] ${i === 0 ? "animate-fade-in-up" : ""}`}
@@ -425,9 +454,26 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
                   evt.status === "warning" ? "bg-drift-warning" : "bg-primary"
                 }`} />
                 <span className="text-muted-foreground font-mono">{evt.timestamp.toLocaleTimeString()}</span>
-                <span className="text-foreground">{evt.message}</span>
+                <span className="text-foreground flex-1">{evt.message}</span>
+                {isClaimed ? (
+                  <span className="flex items-center gap-1 text-[9px] text-primary">
+                    <span className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[7px] font-bold text-primary">SC</span>
+                    In Progress
+                  </span>
+                ) : (evt.status === "critical" || evt.status === "warning") ? (
+                  <button
+                    className="text-[9px] text-muted-foreground hover:text-primary font-mono px-1.5 py-0.5 rounded border border-border hover:border-primary/30 transition-colors"
+                    onClick={() => {
+                      setEvents(prev => prev.map(e => e.id === evt.id ? { ...e, claimedBy: "SC" } as any : e));
+                      toast.success("Incident claimed", { description: `You are now investigating: ${evt.message}`, duration: 3000 });
+                    }}
+                  >
+                    Claim
+                  </button>
+                ) : null}
               </div>
-            ))}
+              );
+            })}
             {events.length === 0 && (
               <div className="text-[10px] text-muted-foreground italic">Waiting for events...</div>
             )}
