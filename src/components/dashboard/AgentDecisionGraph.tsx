@@ -74,6 +74,7 @@ interface AgentDecisionGraphProps {
 }
 
 export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscalationClick }: AgentDecisionGraphProps) {
+  const { alertCriticalDrift } = useDriftNotifications();
   const [nodes, setNodes] = useState(INITIAL_NODES);
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [events, setEvents] = useState<LiveEvent[]>([]);
