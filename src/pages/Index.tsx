@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import AgentDecisionGraph from "@/components/dashboard/AgentDecisionGraph";
 import DriftSimulator from "@/components/dashboard/DriftSimulator";
 import MCPHub from "@/components/dashboard/MCPHub";
@@ -10,8 +11,10 @@ import PipelineHardening from "@/components/dashboard/PipelineHardening";
 import GovernanceVault from "@/components/dashboard/GovernanceVault";
 import PredictiveDrift from "@/components/dashboard/PredictiveDrift";
 import OrchestrationROI from "@/components/dashboard/OrchestrationROI";
+import AgentStabilityIndex from "@/components/dashboard/AgentStabilityIndex";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Shield, CheckCircle } from "lucide-react";
 import type { SimResult } from "@/components/dashboard/DriftSimulator";
 
