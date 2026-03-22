@@ -238,6 +238,16 @@ export default function Index() {
               />
             </div>
           </div>
+        ) : viewMode === "intent-studio" ? (
+          <div className="space-y-4 animate-fade-in">
+            <IntentStudio
+              onPoliciesUpdate={(policies) => {
+                if (Object.keys(policies).length > 0) {
+                  setMissionPoliciesActive(true);
+                }
+              }}
+            />
+          </div>
         ) : (
           <div className="space-y-4 animate-fade-in">
             <GovernanceVault />
