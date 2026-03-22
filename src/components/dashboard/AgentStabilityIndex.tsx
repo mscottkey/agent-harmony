@@ -127,7 +127,7 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
               key={i}
               cx={p.x}
               cy={p.y}
-              r={2.5}
+              r={3.5}
               fill={scores[i] >= 0.8 ? "hsl(152, 60%, 48%)" : scores[i] >= 0.6 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
               className="transition-all duration-700"
             />
