@@ -191,6 +191,20 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
         { nodeId: "2", message: "Lead qualified as enterprise tier", status: "success" as NodeStatus },
         { nodeId: "5", message: "Attempting drift remediation...", status: "running" as NodeStatus },
       ];
+
+      // Inject semantic drift alerts when mission policies are active
+      if (missionPoliciesActive) {
+        const driftingNodes = nodes.filter((n) => n.driftScore < 70);
+        if (driftingNodes.length > 0) {
+          const dNode = driftingNodes[Math.floor(Math.random() * driftingNodes.length)];
+          eventMessages.push({
+            nodeId: dNode.id,
+            message: `⚠ Semantic Drift: ${dNode.label} alignment at ${dNode.driftScore}% — workflow paused`,
+            status: "critical" as NodeStatus,
+          });
+        }
+      }
+
       const evt = eventMessages[Math.floor(Math.random() * eventMessages.length)];
       setEventCounter((c) => c + 1);
       setEvents((prev) => [{ ...evt, id: eventCounter, timestamp: new Date() }, ...prev].slice(0, 5));
@@ -199,7 +213,7 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, semanti
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, [paused, eventCounter]);
+  }, [paused, eventCounter, missionPoliciesActive, nodes]);
 
   // Keep selected node in sync
   useEffect(() => {
