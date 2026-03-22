@@ -24,7 +24,7 @@ interface SafetyGuardrailsProps {
 
 export default function SafetyGuardrails({ onRollbackChange }: SafetyGuardrailsProps) {
   // Use parent-controlled initial state but manage internally
-  const [guardrails, setGuardrails] = __import_useState(INITIAL);
+  const [guardrails, setGuardrails] = useState(INITIAL);
 
   const toggle = (id: string) => {
     setGuardrails((prev) => {
