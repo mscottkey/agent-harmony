@@ -54,6 +54,10 @@ export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChang
         const pii = updated.find((g) => g.id === "pii-redaction");
         onPiiRedactionChange?.(pii?.enabled ?? false);
       }
+      if (id === "intent-lock") {
+        const intent = updated.find((g) => g.id === "intent-lock");
+        onIntentLockChange?.(intent?.enabled ?? false);
+      }
       return updated;
     });
   };
