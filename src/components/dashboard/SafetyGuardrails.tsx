@@ -16,6 +16,7 @@ const INITIAL: Guardrail[] = [
   { id: "hitl", label: "Human-in-the-Loop Gate", description: "Require human approval for cross-platform handoffs", enabled: false, type: "escalation" },
   { id: "semantic-gate", label: "Semantic Verification Gate", description: "On context mismatch, pause execution and require human payload review before forwarding to target agent", enabled: false, type: "verification" },
   { id: "pii-redaction", label: "MCP PII Redaction Layer", description: "Automatically redact personally identifiable information in trace data, payloads, and diagnostic views", enabled: false, type: "privacy" },
+  { id: "intent-lock", label: "Semantic Intent Locking", description: "Auto-block any agent action not identified during Discovery Scan. Unauthorized actions (e.g., Zendesk modifying billing) are flagged and prevented.", enabled: false, type: "intent" },
   { id: "context-check", label: "Context Integrity Check", description: "Validate MCP payload completeness before handoff", enabled: true, type: "rollback" },
   { id: "escalation-path", label: "Escalation Path Override", description: "Route critical drift events to senior ops team", enabled: false, type: "escalation" },
 ];
