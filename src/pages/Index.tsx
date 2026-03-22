@@ -19,7 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Shield, CheckCircle } from "lucide-react";
 import type { SimResult } from "@/components/dashboard/DriftSimulator";
 
-type ViewMode = "monitoring" | "hardening" | "vault" | "intent-studio";
+type ViewMode = "monitoring" | "hardening" | "vault" | "intent-studio" | "discovery";
 
 export default function Index() {
   const navigate = useNavigate();
