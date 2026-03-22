@@ -312,8 +312,52 @@ export default function AgentDecisionGraph() {
               </Badge>
               <span className="text-xs text-muted-foreground font-mono">{selected.agent}</span>
               <span className="text-xs text-muted-foreground font-mono">· {selected.throughput} req/s</span>
+              <Badge variant="outline" className={`text-[10px] ${
+                selected.driftScore >= 80 ? "bg-drift-success/15 text-drift-success border-drift-success/30" :
+                selected.driftScore >= 50 ? "bg-drift-warning/15 text-drift-warning border-drift-warning/30" :
+                "bg-drift-critical/15 text-drift-critical border-drift-critical/30"
+              }`}>
+                Drift Score: {selected.driftScore}/100
+              </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">{selected.detail}</p>
+            <p className="text-xs text-muted-foreground mb-3">{selected.detail}</p>
+            {/* Ground Truth Anchoring */}
+            <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Ground Truth Anchoring</span>
+                <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full ${
+                  selected.driftScore >= 80 ? "bg-drift-success/15 text-drift-success" :
+                  selected.driftScore >= 50 ? "bg-drift-warning/15 text-drift-warning" :
+                  "bg-drift-critical/15 text-drift-critical"
+                }`}>
+                  {selected.driftScore >= 80 ? "ALIGNED" : selected.driftScore >= 50 ? "PARTIAL DRIFT" : "SEMANTIC MISMATCH"}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[9px] text-muted-foreground font-mono uppercase mb-0.5">Original Intent</p>
+                  <p className="text-xs text-foreground">{selected.intent}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-muted-foreground font-mono uppercase mb-0.5">Final Agent Action</p>
+                  <p className="text-xs text-foreground">{selected.action}</p>
+                </div>
+              </div>
+              {/* Alignment bar */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      selected.driftScore >= 80 ? "bg-drift-success" :
+                      selected.driftScore >= 50 ? "bg-drift-warning" :
+                      "bg-drift-critical"
+                    }`}
+                    style={{ width: `${selected.driftScore}%` }}
+                  />
+                </div>
+                <span className="text-[9px] font-mono text-muted-foreground">{selected.driftScore}%</span>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
