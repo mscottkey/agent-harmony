@@ -13,6 +13,9 @@ interface AgentCard {
   version: string;
   requests: number;
   versions?: string[];
+  semanticMission?: string;
+  constraint?: string;
+  permittedTools?: string[];
 }
 
 const INITIAL_AGENTS: AgentCard[] = [
