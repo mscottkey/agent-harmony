@@ -26,6 +26,7 @@ const typeLabels: Record<string, string> = {
   escalation: "🧑 HITL",
   verification: "🔍 Verification",
   privacy: "🛡️ Privacy",
+  intent: "🔐 Zero-Trust",
 };
 
 interface SafetyGuardrailsProps {
