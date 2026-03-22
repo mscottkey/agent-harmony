@@ -41,6 +41,9 @@ interface MCPHubProps {
   onCanaryChange?: (active: boolean) => void;
 }
 
+type SelectedAgentLogic = AgentCard | null;
+}
+
 export default function MCPHub({ onCanaryChange }: MCPHubProps) {
   const [agents, setAgents] = useState(INITIAL_AGENTS);
   const [selectedVersions, setSelectedVersions] = useState<Record<string, string>>({
