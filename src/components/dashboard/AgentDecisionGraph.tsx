@@ -14,16 +14,19 @@ interface GraphNode {
   children: string[];
   detail: string;
   throughput?: number;
+  driftScore: number;
+  intent: string;
+  action: string;
 }
 
 const INITIAL_NODES: GraphNode[] = [
-  { id: "1", label: "Inbound Lead", agent: "Salesforce", status: "success", x: 400, y: 40, children: ["2", "3"], detail: "Lead scored at 87/100", throughput: 142 },
-  { id: "2", label: "Qualify & Route", agent: "Salesforce", status: "success", x: 220, y: 140, children: ["4"], detail: "Enterprise tier detected", throughput: 98 },
-  { id: "3", label: "Churn Risk Check", agent: "ChurnZero", status: "warning", x: 580, y: 140, children: ["5"], detail: "Risk score elevated: 0.72", throughput: 44 },
-  { id: "4", label: "MCP Handoff → Zendesk", agent: "MCP Bridge", status: "success", x: 220, y: 240, children: ["6"], detail: "Context payload: 2.1KB", throughput: 91 },
-  { id: "5", label: "Retention Trigger", agent: "ChurnZero", status: "critical", x: 580, y: 240, children: ["7"], detail: "DRIFT: Reasoning misaligned", throughput: 12 },
-  { id: "6", label: "Ticket Created", agent: "Zendesk", status: "success", x: 140, y: 340, children: [], detail: "Ticket #ZD-4892 created", throughput: 87 },
-  { id: "7", label: "Escalation Failed", agent: "ChurnZero", status: "critical", x: 580, y: 340, children: [], detail: "Missing customer context", throughput: 3 },
+  { id: "1", label: "Inbound Lead", agent: "Salesforce", status: "success", x: 400, y: 40, children: ["2", "3"], detail: "Lead scored at 87/100", throughput: 142, driftScore: 96, intent: "Capture & qualify inbound lead", action: "Lead ingested, scored 87/100" },
+  { id: "2", label: "Qualify & Route", agent: "Salesforce", status: "success", x: 220, y: 140, children: ["4"], detail: "Enterprise tier detected", throughput: 98, driftScore: 93, intent: "Route to enterprise pipeline", action: "Classified as enterprise tier" },
+  { id: "3", label: "Churn Risk Check", agent: "ChurnZero", status: "warning", x: 580, y: 140, children: ["5"], detail: "Risk score elevated: 0.72", throughput: 44, driftScore: 68, intent: "Assess retention probability", action: "Risk elevated but no flag raised" },
+  { id: "4", label: "MCP Handoff → Zendesk", agent: "MCP Bridge", status: "success", x: 220, y: 240, children: ["6"], detail: "Context payload: 2.1KB", throughput: 91, driftScore: 91, intent: "Transfer full context to support", action: "Payload transmitted (2.1KB)" },
+  { id: "5", label: "Retention Trigger", agent: "ChurnZero", status: "critical", x: 580, y: 240, children: ["7"], detail: "DRIFT: Reasoning misaligned", throughput: 12, driftScore: 31, intent: "Initiate proactive retention flow", action: "Triggered generic response template" },
+  { id: "6", label: "Ticket Created", agent: "Zendesk", status: "success", x: 140, y: 340, children: [], detail: "Ticket #ZD-4892 created", throughput: 87, driftScore: 95, intent: "Create prioritized support ticket", action: "Ticket #ZD-4892 created" },
+  { id: "7", label: "Escalation Failed", agent: "ChurnZero", status: "critical", x: 580, y: 340, children: [], detail: "Missing customer context", throughput: 3, driftScore: 12, intent: "Escalate to human with full context", action: "Escalation dropped—no context attached" },
 ];
 
 const statusColors: Record<NodeStatus, string> = {
@@ -83,9 +86,11 @@ export default function AgentDecisionGraph() {
           let newStatus = node.status;
           let newDetail = node.detail;
           const newThroughput = jitter(node.throughput ?? 50, 20);
+          let newDriftScore = Math.max(0, Math.min(100, node.driftScore + Math.floor((Math.random() - 0.5) * 6)));
 
           // Nodes 5 and 7 flicker between critical/warning more often
           if (node.id === "5" || node.id === "7") {
+            newDriftScore = Math.max(5, Math.min(50, node.driftScore + Math.floor((Math.random() - 0.3) * 12)));
             if (roll < 0.3) {
               newStatus = "warning";
               newDetail = roll < 0.15 ? "Drift recovering..." : "Partial context match";
@@ -97,7 +102,7 @@ export default function AgentDecisionGraph() {
               newDetail = "Re-evaluating pipeline...";
             }
           } else if (node.id === "3") {
-            // Churn risk check fluctuates
+            newDriftScore = Math.max(40, Math.min(85, node.driftScore + Math.floor((Math.random() - 0.5) * 10)));
             if (roll < 0.2) {
               newStatus = "critical";
               newDetail = `Risk score spiked: ${(0.8 + Math.random() * 0.19).toFixed(2)}`;
@@ -109,7 +114,7 @@ export default function AgentDecisionGraph() {
               newDetail = `Risk score normal: ${(0.2 + Math.random() * 0.3).toFixed(2)}`;
             }
           } else {
-            // Stable nodes occasionally flicker
+            newDriftScore = Math.max(80, Math.min(100, node.driftScore + Math.floor((Math.random() - 0.5) * 4)));
             if (roll < 0.08) {
               newStatus = "running";
               newDetail = "Processing batch...";
@@ -118,7 +123,7 @@ export default function AgentDecisionGraph() {
             }
           }
 
-          return { ...node, status: newStatus, detail: newDetail, throughput: newThroughput };
+          return { ...node, status: newStatus, detail: newDetail, throughput: newThroughput, driftScore: newDriftScore };
         })
       );
     }, 2000);
@@ -190,14 +195,14 @@ export default function AgentDecisionGraph() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="relative overflow-x-auto">
-          <svg width="780" height="400" className="w-full" viewBox="0 0 780 400">
+          <svg width="780" height="430" className="w-full" viewBox="0 0 780 430">
             {/* Edges with animated particles */}
             {nodes.map((node) =>
               node.children.map((childId) => {
                 const child = nodeMap[childId];
                 if (!child) return null;
                 const targetStatus = child.status;
-                const x1 = node.x, y1 = node.y + 28, x2 = child.x, y2 = child.y;
+                const x1 = node.x, y1 = node.y + 34, x2 = child.x, y2 = child.y;
                 const progress = ((particleTick * 1.5) % 100) / 100;
                 const px = x1 + (x2 - x1) * progress;
                 const py = y1 + (y2 - y1) * progress;
@@ -223,7 +228,6 @@ export default function AgentDecisionGraph() {
                 );
               })
             )}
-            {/* Nodes */}
             {nodes.map((node) => (
               <g
                 key={node.id}
@@ -232,19 +236,40 @@ export default function AgentDecisionGraph() {
               >
                 <rect
                   x={node.x - 80} y={node.y}
-                  width={160} height={56} rx={8}
+                  width={160} height={68} rx={8}
                   className={`${statusColors[node.status]} stroke-[1.5] transition-all duration-500 ${node.status === "critical" ? "node-pulse" : ""}`}
                 />
-                <text x={node.x} y={node.y + 18} textAnchor="middle" className="fill-foreground text-[11px] font-medium">
+                <text x={node.x} y={node.y + 16} textAnchor="middle" className="fill-foreground text-[11px] font-medium">
                   {node.label}
                 </text>
-                <text x={node.x} y={node.y + 33} textAnchor="middle" className="fill-muted-foreground text-[9px] font-mono">
+                <text x={node.x} y={node.y + 30} textAnchor="middle" className="fill-muted-foreground text-[9px] font-mono">
                   {node.agent}
                 </text>
-                {/* Live throughput counter */}
-                <text x={node.x} y={node.y + 48} textAnchor="middle" className="fill-muted-foreground text-[8px] font-mono">
+                <text x={node.x - 30} y={node.y + 44} textAnchor="middle" className="fill-muted-foreground text-[8px] font-mono">
                   {node.throughput ?? 0} req/s
                 </text>
+                <rect
+                  x={node.x + 8} y={node.y + 36}
+                  width={48} height={16} rx={8}
+                  fill={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
+                  fillOpacity={0.2}
+                  stroke={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
+                  strokeOpacity={0.4}
+                  strokeWidth={1}
+                />
+                <text
+                  x={node.x + 32} y={node.y + 48}
+                  textAnchor="middle"
+                  fill={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
+                  className="text-[8px] font-mono font-semibold"
+                >
+                  DS:{node.driftScore}
+                </text>
+                {node.driftScore < 50 && (
+                  <text x={node.x} y={node.y + 62} textAnchor="middle" className="text-[7px] font-mono" fill="hsl(0, 72%, 55%)">
+                    ⚠ semantic mismatch
+                  </text>
+                )}
               </g>
             ))}
           </svg>
@@ -287,8 +312,52 @@ export default function AgentDecisionGraph() {
               </Badge>
               <span className="text-xs text-muted-foreground font-mono">{selected.agent}</span>
               <span className="text-xs text-muted-foreground font-mono">· {selected.throughput} req/s</span>
+              <Badge variant="outline" className={`text-[10px] ${
+                selected.driftScore >= 80 ? "bg-drift-success/15 text-drift-success border-drift-success/30" :
+                selected.driftScore >= 50 ? "bg-drift-warning/15 text-drift-warning border-drift-warning/30" :
+                "bg-drift-critical/15 text-drift-critical border-drift-critical/30"
+              }`}>
+                Drift Score: {selected.driftScore}/100
+              </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">{selected.detail}</p>
+            <p className="text-xs text-muted-foreground mb-3">{selected.detail}</p>
+            {/* Ground Truth Anchoring */}
+            <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Ground Truth Anchoring</span>
+                <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full ${
+                  selected.driftScore >= 80 ? "bg-drift-success/15 text-drift-success" :
+                  selected.driftScore >= 50 ? "bg-drift-warning/15 text-drift-warning" :
+                  "bg-drift-critical/15 text-drift-critical"
+                }`}>
+                  {selected.driftScore >= 80 ? "ALIGNED" : selected.driftScore >= 50 ? "PARTIAL DRIFT" : "SEMANTIC MISMATCH"}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[9px] text-muted-foreground font-mono uppercase mb-0.5">Original Intent</p>
+                  <p className="text-xs text-foreground">{selected.intent}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-muted-foreground font-mono uppercase mb-0.5">Final Agent Action</p>
+                  <p className="text-xs text-foreground">{selected.action}</p>
+                </div>
+              </div>
+              {/* Alignment bar */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      selected.driftScore >= 80 ? "bg-drift-success" :
+                      selected.driftScore >= 50 ? "bg-drift-warning" :
+                      "bg-drift-critical"
+                    }`}
+                    style={{ width: `${selected.driftScore}%` }}
+                  />
+                </div>
+                <span className="text-[9px] font-mono text-muted-foreground">{selected.driftScore}%</span>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
