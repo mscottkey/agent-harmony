@@ -236,7 +236,13 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
             {nodes.map((node) => (
               <g
                 key={node.id}
-                onClick={() => setSelected(node)}
+                onClick={() => {
+                  if (node.id === "7" && onEscalationClick) {
+                    onEscalationClick();
+                  } else {
+                    setSelected(node);
+                  }
+                }}
                 className="cursor-pointer"
               >
                 <rect
@@ -274,6 +280,28 @@ export default function AgentDecisionGraph({ autoRollbackEnabled = true, onEscal
                   <text x={node.x} y={node.y + 62} textAnchor="middle" className="text-[7px] font-mono" fill="hsl(0, 72%, 55%)">
                     ⚠ semantic mismatch
                   </text>
+                )}
+                {/* Auto-rollback "State Reverted" badge */}
+                {autoRollbackEnabled && node.status === "critical" && (
+                  <g>
+                    <rect
+                      x={node.x - 80} y={node.y - 16}
+                      width={80} height={14} rx={7}
+                      fill="hsl(152, 60%, 48%)"
+                      fillOpacity={0.15}
+                      stroke="hsl(152, 60%, 48%)"
+                      strokeOpacity={0.4}
+                      strokeWidth={1}
+                    />
+                    <text
+                      x={node.x - 40} y={node.y - 6}
+                      textAnchor="middle"
+                      fill="hsl(152, 60%, 48%)"
+                      className="text-[7px] font-mono font-semibold"
+                    >
+                      ✓ State Reverted
+                    </text>
+                  </g>
                 )}
               </g>
             ))}
