@@ -135,8 +135,8 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
           {/* Labels */}
           {DIMENSIONS.map((dim, i) => {
             const angle = (Math.PI * 2 * i) / DIMENSIONS.length - Math.PI / 2;
-            const lx = cx + Math.cos(angle) * (maxR + 20);
-            const ly = cy + Math.sin(angle) * (maxR + 20);
+            const lx = cx + Math.cos(angle) * (maxR + 28);
+            const ly = cy + Math.sin(angle) * (maxR + 28);
             return (
               <text
                 key={dim}
@@ -144,10 +144,10 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
                 y={ly}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="text-[5.5px] font-mono"
+                className="text-[7px] font-mono"
                 fill="hsl(215, 20%, 55%)"
               >
-                {dim.length > 14 ? dim.slice(0, 12) + "…" : dim}
+                {dim}
               </text>
             );
           })}
