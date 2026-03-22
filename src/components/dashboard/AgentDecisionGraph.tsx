@@ -228,7 +228,7 @@ export default function AgentDecisionGraph() {
                 );
               })
             )}
-            {/* Nodes */}
+            {nodes.map((node) => (
               <g
                 key={node.id}
                 onClick={() => setSelected(node)}
@@ -248,7 +248,6 @@ export default function AgentDecisionGraph() {
                 <text x={node.x - 30} y={node.y + 44} textAnchor="middle" className="fill-muted-foreground text-[8px] font-mono">
                   {node.throughput ?? 0} req/s
                 </text>
-                {/* Drift Score badge */}
                 <rect
                   x={node.x + 8} y={node.y + 36}
                   width={48} height={16} rx={8}
@@ -266,13 +265,14 @@ export default function AgentDecisionGraph() {
                 >
                   DS:{node.driftScore}
                 </text>
-                {/* Semantic mismatch indicator */}
                 {node.driftScore < 50 && (
                   <text x={node.x} y={node.y + 62} textAnchor="middle" className="text-[7px] font-mono" fill="hsl(0, 72%, 55%)">
                     ⚠ semantic mismatch
                   </text>
                 )}
               </g>
+            ))}
+          </svg>
         </div>
 
         {/* Live Event Feed */}
