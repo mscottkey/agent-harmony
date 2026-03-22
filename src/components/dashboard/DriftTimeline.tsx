@@ -227,7 +227,7 @@ export default function DriftTimeline() {
                                 <span className="text-[10px] font-semibold text-foreground">{ann.author}</span>
                                 <span className="text-[9px] text-muted-foreground">{timeAgo(ann.timestamp)}</span>
                               </div>
-                              <p className="text-[10px] text-muted-foreground leading-relaxed">{ann.text}</p>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">{renderWithMentions(ann.text)}</p>
                             </div>
                           </div>
                         ))}
