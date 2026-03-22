@@ -79,7 +79,7 @@ export default function AgentStabilityIndex({ canaryActive }: AgentStabilityInde
         </div>
       </CardHeader>
       <CardContent>
-        <svg width="300" height="290" viewBox="0 0 300 290" className="w-full max-w-[300px] mx-auto">
+        <svg width="360" height="340" viewBox="0 0 360 340" className="w-full max-w-[360px] mx-auto">
           {/* Grid */}
           {gridLevels.map((level) => {
             const gridPoints = DIMENSIONS.map((_, i) => {
