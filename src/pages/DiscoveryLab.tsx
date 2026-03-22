@@ -73,6 +73,7 @@ const SCAN_LOGS: { message: string; type: "info" | "success" | "warning"; delay:
 ];
 
 export default function DiscoveryLab() {
+  const navigate = useNavigate();
   const [scanning, setScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
