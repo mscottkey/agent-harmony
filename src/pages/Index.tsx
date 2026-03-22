@@ -13,6 +13,7 @@ import PredictiveDrift from "@/components/dashboard/PredictiveDrift";
 import OrchestrationROI from "@/components/dashboard/OrchestrationROI";
 import AgentStabilityIndex from "@/components/dashboard/AgentStabilityIndex";
 import IntentStudio from "@/components/dashboard/IntentStudio";
+import EvaluatorPanel from "@/components/dashboard/EvaluatorPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -28,6 +29,8 @@ export default function Index() {
   const [semanticGate, setSemanticGate] = useState(false);
   const [piiRedaction, setPiiRedaction] = useState(false);
   const [intentLock, setIntentLock] = useState(false);
+  const [killSwitchEnabled, setKillSwitchEnabled] = useState(false);
+  const [killThreshold, setKillThreshold] = useState(25);
   const [rcaModalOpen, setRcaModalOpen] = useState(false);
   const [driftAlert, setDriftAlert] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("monitoring");
@@ -39,16 +42,11 @@ export default function Index() {
     setSimResult(result);
     const peak = 18 + (result.failed / 50) * 30;
     setSimulationPeak(peak);
-    if (result.failed >= 3) {
-      setDriftAlert(true);
-    }
+    if (result.failed >= 3) setDriftAlert(true);
   }, []);
 
   const handleFixApplied = useCallback(() => {
-    setTimeout(() => {
-      setDriftAlert(false);
-      setSimResult(null);
-    }, 2000);
+    setTimeout(() => { setDriftAlert(false); setSimResult(null); }, 2000);
   }, []);
 
   return (
@@ -59,19 +57,10 @@ export default function Index() {
           <div className="flex items-center justify-between max-w-[1600px] mx-auto gap-2 flex-wrap">
             <div className="flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-drift-critical animate-pulse" />
-              <span className="text-sm font-medium text-drift-critical">
-                {simResult.failed}/50 Trials Failed
-              </span>
-              <span className="text-xs text-muted-foreground hidden sm:inline">
-                · Critical drift detected in {simResult.driftPoints.length} breakpoint{simResult.driftPoints.length > 1 ? "s" : ""}
-              </span>
+              <span className="text-sm font-medium text-drift-critical">{simResult.failed}/50 Trials Failed</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline">· Critical drift detected in {simResult.driftPoints.length} breakpoint{simResult.driftPoints.length > 1 ? "s" : ""}</span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-[10px] h-7 border-drift-critical/30 text-drift-critical hover:bg-drift-critical/10"
-              onClick={() => setRcaModalOpen(true)}
-            >
+            <Button variant="outline" size="sm" className="text-[10px] h-7 border-drift-critical/30 text-drift-critical hover:bg-drift-critical/10" onClick={() => setRcaModalOpen(true)}>
               Review {simResult.failed} Failure Trajectories →
             </Button>
           </div>
@@ -91,21 +80,13 @@ export default function Index() {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Badge variant="outline" className="text-[10px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 hidden sm:inline-flex">
-              2 Drift Events
-            </Badge>
+            <Badge variant="outline" className="text-[10px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 hidden sm:inline-flex">2 Drift Events</Badge>
             {driftAlert ? (
-              <Badge variant="outline" className="text-[10px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 animate-pulse">
-                ⚠ Drift Alert
-              </Badge>
+              <Badge variant="outline" className="text-[10px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 animate-pulse">⚠ Drift Alert</Badge>
             ) : (
-              <Badge variant="outline" className="text-[10px] bg-drift-success/10 text-drift-success border-drift-success/30">
-                System Healthy
-              </Badge>
+              <Badge variant="outline" className="text-[10px] bg-drift-success/10 text-drift-success border-drift-success/30">System Healthy</Badge>
             )}
-            <div className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center text-xs font-medium text-secondary-foreground">
-              O
-            </div>
+            <div className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center text-xs font-medium text-secondary-foreground">O</div>
           </div>
         </div>
       </header>
@@ -113,68 +94,24 @@ export default function Index() {
       {/* View Mode Tabs */}
       <div className="border-b border-border px-4 sm:px-6">
         <div className="max-w-[1600px] mx-auto flex items-center gap-1 overflow-x-auto">
-          <button
-            onClick={() => setViewMode("monitoring")}
-            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 whitespace-nowrap ${
-              viewMode === "monitoring"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            📡 Monitoring
-          </button>
-          <button
-            onClick={() => setViewMode("hardening")}
-            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              viewMode === "hardening"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            🛡️ Pipeline Hardening
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-              DEV
-            </span>
-          </button>
-          <button
-            onClick={() => setViewMode("vault")}
-            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              viewMode === "vault"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            🏛️ Audit Vault
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-drift-warning/10 text-drift-warning border border-drift-warning/20">
-              NIST
-            </span>
-          </button>
-          <button
-            onClick={() => setViewMode("intent-studio")}
-            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              viewMode === "intent-studio"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            🧠 Intent Studio
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-              NEW
-            </span>
-          </button>
-          <button
-            onClick={() => setViewMode("discovery")}
-            className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              viewMode === "discovery"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            🔬 Discovery Lab
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-drift-success/10 text-drift-success border border-drift-success/20">
-              NEW
-            </span>
-          </button>
+          {[
+            { id: "monitoring" as ViewMode, label: "📡 Monitoring" },
+            { id: "hardening" as ViewMode, label: "🛡️ Pipeline Hardening", badge: "DEV", badgeClass: "bg-primary/10 text-primary border-primary/20" },
+            { id: "vault" as ViewMode, label: "🏛️ Audit Vault", badge: "NIST", badgeClass: "bg-drift-warning/10 text-drift-warning border-drift-warning/20" },
+            { id: "intent-studio" as ViewMode, label: "🧠 Intent Studio", badge: "NEW", badgeClass: "bg-primary/10 text-primary border-primary/20" },
+            { id: "discovery" as ViewMode, label: "🔬 Discovery Lab", badge: "NEW", badgeClass: "bg-drift-success/10 text-drift-success border-drift-success/20" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setViewMode(tab.id)}
+              className={`px-4 py-2.5 text-xs font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+                viewMode === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+              {tab.badge && <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full border ${tab.badgeClass}`}>{tab.badge}</span>}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -198,21 +135,23 @@ export default function Index() {
                 onEscalationClick={() => setRcaModalOpen(true)}
                 intentLayerVisible={intentLayerVisible}
                 missionPoliciesActive={missionPoliciesActive}
+                killSwitchEnabled={killSwitchEnabled}
+                killThreshold={killThreshold}
               />
             </div>
             <DriftSimulator onSimulationComplete={handleSimulationComplete} />
-
             <PredictiveDrift canaryActive={canaryActive} />
             <DriftAnalytics simulationPeak={simulationPeak} canaryActive={canaryActive} />
-
             <AgentStabilityIndex canaryActive={canaryActive} />
 
             <div className="lg:col-span-2">
               <MCPHub onCanaryChange={setCanaryActive} />
             </div>
-
             <OrchestrationROI intentLockActive={intentLock} />
 
+            <div className="lg:col-span-3">
+              <EvaluatorPanel />
+            </div>
             <div className="lg:col-span-3">
               <DriftTimeline />
             </div>
@@ -222,6 +161,8 @@ export default function Index() {
                 onSemanticGateChange={setSemanticGate}
                 onPiiRedactionChange={setPiiRedaction}
                 onIntentLockChange={setIntentLock}
+                onKillSwitchChange={setKillSwitchEnabled}
+                onKillThresholdChange={setKillThreshold}
               />
             </div>
           </div>
@@ -232,24 +173,18 @@ export default function Index() {
               <span className="text-[10px] text-muted-foreground">Changes are isolated from production · No live agents affected</span>
             </div>
             <PipelineHardening />
-            <div className="lg:col-span-3">
-              <SafetyGuardrails
-                onRollbackChange={setAutoRollback}
-                onSemanticGateChange={setSemanticGate}
-                onPiiRedactionChange={setPiiRedaction}
-                onIntentLockChange={setIntentLock}
-              />
-            </div>
+            <SafetyGuardrails
+              onRollbackChange={setAutoRollback}
+              onSemanticGateChange={setSemanticGate}
+              onPiiRedactionChange={setPiiRedaction}
+              onIntentLockChange={setIntentLock}
+              onKillSwitchChange={setKillSwitchEnabled}
+              onKillThresholdChange={setKillThreshold}
+            />
           </div>
         ) : viewMode === "intent-studio" ? (
           <div className="space-y-4 animate-fade-in">
-            <IntentStudio
-              onPoliciesUpdate={(policies) => {
-                if (Object.keys(policies).length > 0) {
-                  setMissionPoliciesActive(true);
-                }
-              }}
-            />
+            <IntentStudio onPoliciesUpdate={(policies) => { if (Object.keys(policies).length > 0) setMissionPoliciesActive(true); }} />
           </div>
         ) : viewMode === "discovery" ? (
           <div className="space-y-4 animate-fade-in">
@@ -262,7 +197,7 @@ export default function Index() {
         )}
       </main>
 
-      {/* Compliance Certified Footer */}
+      {/* Footer */}
       <footer className="border-t border-border bg-muted/20 px-4 sm:px-6 py-3">
         <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-3">
@@ -278,20 +213,12 @@ export default function Index() {
           <div className="flex items-center gap-2">
             <CheckCircle className="w-3 h-3 text-drift-info" />
             <span className="text-[9px] text-muted-foreground">Governed & safe for production data</span>
-            <Badge variant="outline" className="text-[8px] bg-drift-success/10 text-drift-success border-drift-success/20">
-              PRODUCTION
-            </Badge>
+            <Badge variant="outline" className="text-[8px] bg-drift-success/10 text-drift-success border-drift-success/20">PRODUCTION</Badge>
           </div>
         </div>
       </footer>
 
-      {/* RCA Diagnostic Modal */}
-      <DriftDiagnosticModal
-        open={rcaModalOpen}
-        onOpenChange={setRcaModalOpen}
-        onFixApplied={handleFixApplied}
-        piiRedactionEnabled={piiRedaction}
-      />
+      <DriftDiagnosticModal open={rcaModalOpen} onOpenChange={setRcaModalOpen} onFixApplied={handleFixApplied} piiRedactionEnabled={piiRedaction} />
     </div>
   );
 }

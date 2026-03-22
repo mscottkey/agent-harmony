@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Shield } from "lucide-react";
+import { toast } from "sonner";
 
 interface AgentCard {
   name: string;
@@ -26,6 +27,57 @@ const INITIAL_AGENTS: AgentCard[] = [
   { name: "Zendesk", protocol: "A2A v1.1", latency: 78, successRate: 97.8, status: "connected", icon: "🎧", version: "v2.4.2", requests: 923, semanticMission: "Service Recovery", constraint: "Read-Only (Billing)", permittedTools: ["ticket.create", "ticket.escalate", "ticket.resolve", "macro.apply"] },
   { name: "ChurnZero", protocol: "A2A v1.0", latency: 156, successRate: 91.4, status: "degraded", icon: "📊", version: "v1.8.1", requests: 412, semanticMission: "Retention Intelligence", constraint: "Read-Only (No Direct Contact)", permittedTools: ["churn.predict", "health.score", "segment.analyze", "alert.trigger"] },
 ];
+
+const A2A_CARDS: Record<string, object> = {
+  Salesforce: {
+    name: "Salesforce Agent",
+    version: "v3.1.0",
+    description: "Lead Qualification & Pipeline Routing Agent",
+    protocol: "A2A-MCP-v1.2",
+    capabilities: ["lead.score", "lead.qualify", "opportunity.create", "pipeline.route"],
+    authentication: { type: "OAuth2", scopes: ["crm.read", "crm.write"] },
+    constraints: {
+      max_payload_size: "2MB",
+      timeout_ms: 5000,
+      data_boundary: "Read-Write (CRM Only)",
+      forbidden_actions: ["billing.modify", "payment.process"],
+    },
+    endpoint: "https://agents.salesforce.com/.well-known/agent-card.json",
+    schema_version: "A2A-MCP-v1.2",
+  },
+  Zendesk: {
+    name: "Zendesk Agent",
+    version: "v2.4.2",
+    description: "Service Recovery & Ticket Management Agent",
+    protocol: "A2A-MCP-v1.1",
+    capabilities: ["ticket.create", "ticket.escalate", "ticket.resolve", "macro.apply"],
+    authentication: { type: "API Key", scopes: ["tickets.read", "tickets.write"] },
+    constraints: {
+      max_payload_size: "1MB",
+      timeout_ms: 8000,
+      data_boundary: "Read-Only (Billing)",
+      forbidden_actions: ["billing.modify", "user.delete", "payment.refund"],
+    },
+    endpoint: "https://agents.zendesk.com/.well-known/agent-card.json",
+    schema_version: "A2A-MCP-v1.1",
+  },
+  ChurnZero: {
+    name: "ChurnZero Agent",
+    version: "v1.8.1",
+    description: "Retention Intelligence & Health Scoring Agent",
+    protocol: "A2A-MCP-v1.0",
+    capabilities: ["churn.predict", "health.score", "segment.analyze", "alert.trigger"],
+    authentication: { type: "OAuth2", scopes: ["analytics.read"] },
+    constraints: {
+      max_payload_size: "512KB",
+      timeout_ms: 12000,
+      data_boundary: "Read-Only (No Direct Contact)",
+      forbidden_actions: ["customer.contact", "billing.modify", "account.close"],
+    },
+    endpoint: "https://agents.churnzero.com/.well-known/agent-card.json",
+    schema_version: "A2A-MCP-v1.0",
+  },
+};
 
 const statusStyle: Record<string, string> = {
   connected: "bg-drift-success/15 text-drift-success border-drift-success/30",
@@ -56,9 +108,7 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
 
   const isCanary = selectedVersions["Salesforce"] === "v3.2.0-beta (Canary)";
 
-  useEffect(() => {
-    onCanaryChange?.(isCanary);
-  }, [isCanary, onCanaryChange]);
+  useEffect(() => { onCanaryChange?.(isCanary); }, [isCanary, onCanaryChange]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -66,27 +116,19 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
         prev.map((agent) => {
           const canaryBoost = agent.name === "Salesforce" && isCanary ? 60 : 0;
           const latency = jitter(agent.latency + canaryBoost, agent.name === "ChurnZero" ? 80 : isCanary && agent.name === "Salesforce" ? 50 : 20);
-          const successRate = Math.min(100, Math.max(85, jitter(
-            agent.successRate - (agent.name === "Salesforce" && isCanary ? 4 : 0),
-            agent.name === "ChurnZero" ? 6 : 1.5
-          )));
+          const successRate = Math.min(100, Math.max(85, jitter(agent.successRate - (agent.name === "Salesforce" && isCanary ? 4 : 0), agent.name === "ChurnZero" ? 6 : 1.5)));
           const requests = agent.requests + Math.floor(Math.random() * 8) + 1;
-
           let status: "connected" | "degraded" | "offline" = "connected";
           if (latency > 200) status = "offline";
           else if (latency > 100 || successRate < 95) status = "degraded";
-
           return { ...agent, latency, successRate, status, requests };
         })
       );
-
       setSparklines((prev) => {
         const next = { ...prev };
         for (const key of Object.keys(next)) {
           const canaryBoost = key === "Salesforce" && isCanary ? 60 : 0;
-          next[key] = [...next[key].slice(1), jitter(
-            (key === "ChurnZero" ? 150 : key === "Zendesk" ? 75 : 40) + canaryBoost, 40
-          )];
+          next[key] = [...next[key].slice(1), jitter((key === "ChurnZero" ? 150 : key === "Zendesk" ? 75 : 40) + canaryBoost, 40)];
         }
         return next;
       });
@@ -112,6 +154,13 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
   };
 
   const [logicModal, setLogicModal] = useState<SelectedAgentLogic>(null);
+  const [agentCardModal, setAgentCardModal] = useState<string | null>(null);
+
+  const handleCopyJson = (agentName: string) => {
+    const json = JSON.stringify(A2A_CARDS[agentName], null, 2);
+    navigator.clipboard.writeText(json);
+    toast.success("Agent Card JSON copied to clipboard", { description: `${agentName} A2A manifest`, duration: 3000 });
+  };
 
   return (
     <>
@@ -145,9 +194,7 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
                   <div className="text-sm font-medium flex items-center gap-2">
                     {agent.name}
                     {agent.name === "Salesforce" && isCanary && (
-                      <Badge variant="outline" className="text-[9px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 animate-pulse">
-                        CANARY
-                      </Badge>
+                      <Badge variant="outline" className="text-[9px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 animate-pulse">CANARY</Badge>
                     )}
                   </div>
                   <div className="text-[10px] text-muted-foreground font-mono">Agent {agent.version}</div>
@@ -155,43 +202,28 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
               </div>
               <div className="flex items-center gap-2">
                 {agent.versions && (
-                  <Select
-                    value={selectedVersions[agent.name] || agent.versions[0]}
-                    onValueChange={(v) => handleVersionChange(agent.name, v)}
-                  >
-                    <SelectTrigger className="h-6 text-[9px] w-[140px] bg-secondary border-border">
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={selectedVersions[agent.name] || agent.versions[0]} onValueChange={(v) => handleVersionChange(agent.name, v)}>
+                    <SelectTrigger className="h-6 text-[9px] w-[140px] bg-secondary border-border"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {agent.versions.map((v) => (
-                        <SelectItem key={v} value={v} className="text-[10px]">{v}</SelectItem>
-                      ))}
+                      {agent.versions.map((v) => (<SelectItem key={v} value={v} className="text-[10px]">{v}</SelectItem>))}
                     </SelectContent>
                   </Select>
                 )}
-                <Badge variant="outline" className={`text-[10px] transition-all duration-300 ${statusStyle[agent.status]}`}>
-                  {agent.status}
-                </Badge>
+                <Badge variant="outline" className={`text-[10px] transition-all duration-300 ${statusStyle[agent.status]}`}>{agent.status}</Badge>
               </div>
             </div>
 
-            {/* Semantic Mission Badges */}
             {agent.semanticMission && (
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge
-                  variant="outline"
-                  className="text-[9px] bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20 transition-colors"
-                  onClick={() => setLogicModal(agent)}
-                >
+                <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20 transition-colors" onClick={() => setLogicModal(agent)}>
                   🎯 Role: {agent.semanticMission}
                 </Badge>
-                <Badge
-                  variant="outline"
-                  className="text-[9px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 cursor-pointer hover:bg-drift-warning/20 transition-colors"
-                  onClick={() => setLogicModal(agent)}
-                >
+                <Badge variant="outline" className="text-[9px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 cursor-pointer hover:bg-drift-warning/20 transition-colors" onClick={() => setLogicModal(agent)}>
                   🔒 {agent.constraint}
                 </Badge>
+                <Button size="sm" variant="outline" className="text-[9px] h-5 px-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => setAgentCardModal(agent.name)}>
+                  📋 Agent Card
+                </Button>
               </div>
             )}
 
@@ -201,15 +233,11 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
                 <div className="text-[9px] text-muted-foreground">Protocol</div>
               </div>
               <div>
-                <div className={`text-xs font-mono font-medium transition-colors duration-300 ${agent.latency > 100 ? "text-drift-warning" : "text-drift-success"}`}>
-                  {agent.latency}ms
-                </div>
+                <div className={`text-xs font-mono font-medium transition-colors duration-300 ${agent.latency > 100 ? "text-drift-warning" : "text-drift-success"}`}>{agent.latency}ms</div>
                 <div className="text-[9px] text-muted-foreground">Latency</div>
               </div>
               <div>
-                <div className={`text-xs font-mono font-medium transition-colors duration-300 ${agent.successRate < 95 ? "text-drift-warning" : "text-drift-success"}`}>
-                  {agent.successRate}%
-                </div>
+                <div className={`text-xs font-mono font-medium transition-colors duration-300 ${agent.successRate < 95 ? "text-drift-warning" : "text-drift-success"}`}>{agent.successRate}%</div>
                 <div className="text-[9px] text-muted-foreground">Success</div>
               </div>
               <div>
@@ -219,10 +247,7 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
             </div>
             <div className="flex items-center gap-2 pt-1 border-t border-border/50">
               <span className="text-[9px] text-muted-foreground font-mono w-12">Latency</span>
-              <MiniSparkline
-                data={sparklines[agent.name] || []}
-                color={agent.latency > 100 ? "#f59e0b" : "#22c55e"}
-              />
+              <MiniSparkline data={sparklines[agent.name] || []} color={agent.latency > 100 ? "#f59e0b" : "#22c55e"} />
             </div>
           </div>
         ))}
@@ -260,6 +285,31 @@ export default function MCPHub({ onCanaryChange }: MCPHubProps) {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+
+    {/* A2A Agent Card Modal */}
+    <Dialog open={!!agentCardModal} onOpenChange={(o) => !o && setAgentCardModal(null)}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            📋 A2A Agent Card — {agentCardModal}
+          </DialogTitle>
+        </DialogHeader>
+        {agentCardModal && A2A_CARDS[agentCardModal] && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/30">A2A-MCP Protocol</Badge>
+              <Badge variant="outline" className="text-[9px] bg-drift-success/10 text-drift-success border-drift-success/30">.well-known/agent-card.json</Badge>
+            </div>
+            <pre className="text-[10px] font-mono text-foreground bg-muted/50 rounded-lg border border-border p-4 overflow-auto max-h-[400px] whitespace-pre-wrap">
+              {JSON.stringify(A2A_CARDS[agentCardModal], null, 2)}
+            </pre>
+            <Button size="sm" variant="outline" className="text-[10px] h-7 w-full border-primary/30 text-primary hover:bg-primary/10" onClick={() => handleCopyJson(agentCardModal!)}>
+              📋 Copy JSON to Clipboard
+            </Button>
           </div>
         )}
       </DialogContent>
