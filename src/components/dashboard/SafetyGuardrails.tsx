@@ -8,22 +8,29 @@ interface Guardrail {
   label: string;
   description: string;
   enabled: boolean;
-  type: "rollback" | "escalation";
+  type: "rollback" | "escalation" | "verification";
 }
 
 const INITIAL: Guardrail[] = [
   { id: "auto-rollback", label: "Autonomous Rollback", description: "Automatically revert agent decisions when drift exceeds threshold", enabled: true, type: "rollback" },
   { id: "hitl", label: "Human-in-the-Loop Gate", description: "Require human approval for cross-platform handoffs", enabled: false, type: "escalation" },
+  { id: "semantic-gate", label: "Semantic Verification Gate", description: "On context mismatch, pause execution and require human payload review before forwarding to target agent", enabled: false, type: "verification" },
   { id: "context-check", label: "Context Integrity Check", description: "Validate MCP payload completeness before handoff", enabled: true, type: "rollback" },
   { id: "escalation-path", label: "Escalation Path Override", description: "Route critical drift events to senior ops team", enabled: false, type: "escalation" },
 ];
 
+const typeLabels: Record<string, string> = {
+  rollback: "🔄 Rollback",
+  escalation: "🧑 HITL",
+  verification: "🔍 Verification",
+};
+
 interface SafetyGuardrailsProps {
   onRollbackChange?: (enabled: boolean) => void;
+  onSemanticGateChange?: (enabled: boolean) => void;
 }
 
-export default function SafetyGuardrails({ onRollbackChange }: SafetyGuardrailsProps) {
-  // Use parent-controlled initial state but manage internally
+export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChange }: SafetyGuardrailsProps) {
   const [guardrails, setGuardrails] = useState(INITIAL);
 
   const toggle = (id: string) => {
@@ -32,6 +39,10 @@ export default function SafetyGuardrails({ onRollbackChange }: SafetyGuardrailsP
       if (id === "auto-rollback") {
         const rollback = updated.find((g) => g.id === "auto-rollback");
         onRollbackChange?.(rollback?.enabled ?? false);
+      }
+      if (id === "semantic-gate") {
+        const gate = updated.find((g) => g.id === "semantic-gate");
+        onSemanticGateChange?.(gate?.enabled ?? false);
       }
       return updated;
     });
@@ -53,14 +64,19 @@ export default function SafetyGuardrails({ onRollbackChange }: SafetyGuardrailsP
             key={g.id}
             className={`flex items-start justify-between gap-3 rounded-lg border p-3 transition-all ${
               g.enabled ? "border-primary/20 bg-primary/5" : "border-border bg-card"
-            }`}
+            } ${g.id === "semantic-gate" && g.enabled ? "border-drift-warning/30 bg-drift-warning/5" : ""}`}
           >
             <div className="space-y-0.5 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{g.label}</span>
                 <Badge variant="outline" className="text-[9px] border-border">
-                  {g.type === "rollback" ? "🔄 Rollback" : "🧑 HITL"}
+                  {typeLabels[g.type] || g.type}
                 </Badge>
+                {g.id === "semantic-gate" && g.enabled && (
+                  <Badge variant="outline" className="text-[9px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 animate-pulse">
+                    ACTIVE
+                  </Badge>
+                )}
               </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed">{g.description}</p>
             </div>
