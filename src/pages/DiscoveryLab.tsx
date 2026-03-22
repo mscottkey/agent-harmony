@@ -283,10 +283,6 @@ export default function DiscoveryLab() {
             </CardContent>
           </Card>
         )}
-      </main>
-
-      {/* Compliance Footer */}
-      <footer>... existing footer removed</footer>
     </div>
   );
 }
