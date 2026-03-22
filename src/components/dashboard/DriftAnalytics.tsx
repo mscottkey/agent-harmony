@@ -22,9 +22,9 @@ const BASE_DATA = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md border border-border bg-card p-2 shadow-lg">
+    <div className="rounded-md border border-border bg-card p-2 shadow-lg min-w-[120px]">
       <p className="text-xs font-medium text-foreground">{label}</p>
-      <p className="text-xs text-primary">Variance: {payload[0].value}%</p>
+      <p className="text-xs font-mono text-primary">Variance: {payload[0].value}%</p>
     </div>
   );
 };
