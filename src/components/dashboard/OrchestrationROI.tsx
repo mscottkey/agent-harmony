@@ -9,7 +9,7 @@ interface OrchestrationROIProps {
   intentLockActive?: boolean;
 }
 
-export default function OrchestrationROI() {
+export default function OrchestrationROI({ intentLockActive }: OrchestrationROIProps) {
   const [animatedMTTR, setAnimatedMTTR] = useState(0);
   const [animatedToil, setAnimatedToil] = useState(0);
 
