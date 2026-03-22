@@ -229,7 +229,6 @@ export default function AgentDecisionGraph() {
               })
             )}
             {/* Nodes */}
-            {nodes.map((node) => (
               <g
                 key={node.id}
                 onClick={() => setSelected(node)}
@@ -237,22 +236,43 @@ export default function AgentDecisionGraph() {
               >
                 <rect
                   x={node.x - 80} y={node.y}
-                  width={160} height={56} rx={8}
+                  width={160} height={68} rx={8}
                   className={`${statusColors[node.status]} stroke-[1.5] transition-all duration-500 ${node.status === "critical" ? "node-pulse" : ""}`}
                 />
-                <text x={node.x} y={node.y + 18} textAnchor="middle" className="fill-foreground text-[11px] font-medium">
+                <text x={node.x} y={node.y + 16} textAnchor="middle" className="fill-foreground text-[11px] font-medium">
                   {node.label}
                 </text>
-                <text x={node.x} y={node.y + 33} textAnchor="middle" className="fill-muted-foreground text-[9px] font-mono">
+                <text x={node.x} y={node.y + 30} textAnchor="middle" className="fill-muted-foreground text-[9px] font-mono">
                   {node.agent}
                 </text>
-                {/* Live throughput counter */}
-                <text x={node.x} y={node.y + 48} textAnchor="middle" className="fill-muted-foreground text-[8px] font-mono">
+                <text x={node.x - 30} y={node.y + 44} textAnchor="middle" className="fill-muted-foreground text-[8px] font-mono">
                   {node.throughput ?? 0} req/s
                 </text>
+                {/* Drift Score badge */}
+                <rect
+                  x={node.x + 8} y={node.y + 36}
+                  width={48} height={16} rx={8}
+                  fill={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
+                  fillOpacity={0.2}
+                  stroke={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
+                  strokeOpacity={0.4}
+                  strokeWidth={1}
+                />
+                <text
+                  x={node.x + 32} y={node.y + 48}
+                  textAnchor="middle"
+                  fill={node.driftScore >= 80 ? "hsl(152, 60%, 48%)" : node.driftScore >= 50 ? "hsl(38, 92%, 55%)" : "hsl(0, 72%, 55%)"}
+                  className="text-[8px] font-mono font-semibold"
+                >
+                  DS:{node.driftScore}
+                </text>
+                {/* Semantic mismatch indicator */}
+                {node.driftScore < 50 && (
+                  <text x={node.x} y={node.y + 62} textAnchor="middle" className="text-[7px] font-mono" fill="hsl(0, 72%, 55%)">
+                    ⚠ semantic mismatch
+                  </text>
+                )}
               </g>
-            ))}
-          </svg>
         </div>
 
         {/* Live Event Feed */}
