@@ -153,16 +153,21 @@ Timestamp:       ${new Date().toISOString()}
                   <span className="w-2 h-2 rounded-full bg-drift-success" />
                   <span className="text-[10px] font-mono text-drift-success uppercase">Intent Payload · Salesforce Agent</span>
                 </div>
+                {piiRedactionEnabled && (
+                  <div className="flex items-center gap-1 mb-1.5 text-[9px] text-drift-info font-mono">
+                    <span>🛡️</span> PII Redaction Active
+                  </div>
+                )}
                 <pre className="text-[10px] font-mono text-foreground/80 whitespace-pre-wrap leading-relaxed">
 {`{
   "action": "escalate_to_human",
-  "customer_id": "ENT-8847",
+  "customer_id": "${piiRedactionEnabled ? redact("ENT-8847") : "ENT-8847"}",
   "context": {
     "churn_score": 0.89,
     "tier": "enterprise",
-    "ltv": "$284,000",
+    "ltv": "${piiRedactionEnabled ? redact("$284,000") : "$284,000"}",
     "open_tickets": 3,
-    "sentiment": "frustrated"
+    "sentiment": "${piiRedactionEnabled ? redact("frustrated") : "frustrated"}"
   },
   "priority": "P1",
   "routing": "senior_ops"

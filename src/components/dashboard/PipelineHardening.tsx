@@ -403,14 +403,60 @@ export default function PipelineHardening() {
 
         {/* Re-simulation controls */}
         <div className="space-y-3">
-          <Button
-            onClick={runReSimulation}
-            disabled={running || !hardenedInstruction.trim()}
-            className="w-full"
-            size="sm"
-          >
-            {running ? "Running Re-Simulation..." : "🔄 Run Re-Simulation · Frustrated Customer × 50 Trials"}
-          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Button
+              onClick={runReSimulation}
+              disabled={running || backtesting || !hardenedInstruction.trim()}
+              className="w-full"
+              size="sm"
+            >
+              {running ? "Running Re-Simulation..." : "🔄 Run Re-Simulation · 50 Trials"}
+            </Button>
+            <Button
+              onClick={runBacktest}
+              disabled={running || backtesting || !hardenedInstruction.trim()}
+              variant="outline"
+              className="w-full border-primary/30 text-primary hover:bg-primary/10"
+              size="sm"
+            >
+              {backtesting ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  Backtesting Against Vault...
+                </span>
+              ) : "🏛️ Backtest Against Vault · Last 50 Failures"}
+            </Button>
+          </div>
+
+          {backtestResult && (
+            <div className="animate-fade-in rounded-lg border border-drift-success/30 bg-drift-success/5 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📊</span>
+                  <span className="text-sm font-semibold text-drift-success">Vault Backtest Results</span>
+                </div>
+                <Badge variant="outline" className="text-[10px] bg-drift-success/15 text-drift-success border-drift-success/30">
+                  {Math.round((backtestResult.prevented / backtestResult.total) * 100)}% Prevention Rate
+                </Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+                Fix would have prevented <span className="text-drift-success font-semibold">{backtestResult.prevented}/{backtestResult.total}</span> historical 
+                failures stored in the Audit Vault. Tested against production failure trajectories from the last 30 days.
+              </p>
+              <div className="flex gap-1">
+                {Array.from({ length: backtestResult.total }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-3 flex-1 rounded-sm ${i < backtestResult.prevented ? "bg-drift-success/60" : "bg-drift-critical/60"}`}
+                  />
+                ))}
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px] text-drift-success font-mono">{backtestResult.prevented} prevented</span>
+                <span className="text-[9px] text-drift-critical font-mono">{backtestResult.total - backtestResult.prevented} remaining</span>
+              </div>
+            </div>
+          )}
 
           {running && (
             <div className="space-y-1">
