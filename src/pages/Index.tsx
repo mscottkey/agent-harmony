@@ -34,6 +34,7 @@ export default function Index() {
   const [viewMode, setViewMode] = useState<ViewMode>("monitoring");
   const [canaryActive, setCanaryActive] = useState(false);
   const [intentLayerVisible, setIntentLayerVisible] = useState(false);
+  const [missionPoliciesActive, setMissionPoliciesActive] = useState(false);
 
   const handleSimulationComplete = useCallback((result: SimResult) => {
     setSimResult(result);

@@ -101,3 +101,12 @@
 .animate-fade-in-up {
   animation: fadeInUp 0.4s ease-out forwards;
 }
+
+@keyframes vibeGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px hsl(187, 80%, 48%)); }
+  50% { filter: drop-shadow(0 0 8px hsl(187, 80%, 48%)); }
+}
+
+.vibe-glow {
+  animation: vibeGlow 1.5s ease-in-out infinite;
+}
