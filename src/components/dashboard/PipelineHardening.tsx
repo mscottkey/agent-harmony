@@ -365,7 +365,7 @@ export default function PipelineHardening() {
               <span className="w-2 h-2 rounded-full bg-muted-foreground" />
               <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Original Orchestrator Prompt</span>
             </div>
-            <pre className="text-[10px] font-mono text-foreground/70 whitespace-pre-wrap leading-relaxed bg-background/50 rounded-md p-3 border border-border/50 max-h-[220px] overflow-y-auto">
+            <pre className="text-[11px] font-mono text-foreground/70 whitespace-pre-wrap leading-[1.6] bg-background/50 rounded-md p-3 border border-muted-foreground/20 max-h-[260px] overflow-y-auto">
               {ORIGINAL_PROMPT}
             </pre>
           </div>
