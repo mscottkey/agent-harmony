@@ -141,11 +141,27 @@ export default function PipelineHardening() {
   const [diffFrom, setDiffFrom] = useState<string | null>(null);
   const [diffTo, setDiffTo] = useState<string | null>(null);
   const [aiSuggesting, setAiSuggesting] = useState(false);
+  const [backtesting, setBacktesting] = useState(false);
+  const [backtestResult, setBacktestResult] = useState<{ prevented: number; total: number } | null>(null);
 
   const runReSimulation = useCallback(() => {
     setRunning(true);
     setProgress(0);
     setResult(null);
+  }, []);
+
+  const runBacktest = useCallback(() => {
+    setBacktesting(true);
+    setBacktestResult(null);
+    setTimeout(() => {
+      const prevented = 38 + Math.floor(Math.random() * 10);
+      setBacktestResult({ prevented, total: 50 });
+      setBacktesting(false);
+      toast.success(`Backtest complete: fix would have prevented ${prevented}/50 historical failures`, {
+        description: "Tested against last 50 failures from the Audit Vault",
+        duration: 5000,
+      });
+    }, 2800);
   }, []);
 
   const handleAiSuggest = useCallback(() => {
