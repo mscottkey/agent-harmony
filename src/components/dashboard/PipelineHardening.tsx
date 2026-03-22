@@ -354,9 +354,27 @@ export default function PipelineHardening() {
             </pre>
           </div>
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary" />
-              <span className="text-[10px] font-mono text-primary uppercase tracking-wider">Hardened Instruction</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary" />
+                <span className="text-[10px] font-mono text-primary uppercase tracking-wider">Hardened Instruction</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-[10px] h-6 px-2 border-primary/30 text-primary hover:bg-primary/10"
+                onClick={handleAiSuggest}
+                disabled={aiSuggesting}
+              >
+                {aiSuggesting ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    Analyzing Failure Trajectory...
+                  </span>
+                ) : (
+                  "✨ AI-Suggest Fix"
+                )}
+              </Button>
             </div>
             <textarea
               value={hardenedInstruction}
