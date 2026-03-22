@@ -202,7 +202,7 @@ export default function AgentDecisionGraph() {
                 const child = nodeMap[childId];
                 if (!child) return null;
                 const targetStatus = child.status;
-                const x1 = node.x, y1 = node.y + 28, x2 = child.x, y2 = child.y;
+                const x1 = node.x, y1 = node.y + 34, x2 = child.x, y2 = child.y;
                 const progress = ((particleTick * 1.5) % 100) / 100;
                 const px = x1 + (x2 - x1) * progress;
                 const py = y1 + (y2 - y1) * progress;
