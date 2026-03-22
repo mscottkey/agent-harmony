@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import DiscoveryLab from "@/pages/DiscoveryLab";
 import AgentDecisionGraph from "@/components/dashboard/AgentDecisionGraph";
 import DriftSimulator from "@/components/dashboard/DriftSimulator";
 import MCPHub from "@/components/dashboard/MCPHub";
