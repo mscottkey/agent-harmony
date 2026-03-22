@@ -8,9 +8,14 @@ interface DriftDiagnosticModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onFixApplied?: () => void;
+  piiRedactionEnabled?: boolean;
 }
 
-export default function DriftDiagnosticModal({ open, onOpenChange, onFixApplied }: DriftDiagnosticModalProps) {
+function redact(value: string): string {
+  return `[REDACTED]`;
+}
+
+export default function DriftDiagnosticModal({ open, onOpenChange, onFixApplied, piiRedactionEnabled = false }: DriftDiagnosticModalProps) {
   const [fixApplied, setFixApplied] = useState(false);
   const [regressionSaved, setRegressionSaved] = useState(false);
 
