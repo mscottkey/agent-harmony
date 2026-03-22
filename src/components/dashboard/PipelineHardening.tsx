@@ -111,6 +111,26 @@ GUARDRAILS:
   },
 ];
 
+const AI_SUGGESTIONS = [
+  `Inject schema validation layer to transform Salesforce v2.0 
+sentiment objects into v1.0 compatible strings before Zendesk 
+handoff. Specifically:
+- Map "context.sentiment" (object) → "context.sentiment_score" (float)
+- Normalize enum fields to lowercase before MCP transmission
+- Add fallback mapping for any v2.0-only fields not in v1.0 spec
+- Validate customer_id format matches UUID v4 pattern`,
+  `Add pre-flight payload verification at MCP Bridge boundary:
+- Schema fingerprint check: hash payload against target A2A spec
+- Field-level type coercion for cross-version compatibility
+- Inject "schema_version" header in MCP handoff metadata
+- Auto-strip deprecated fields with audit log entry`,
+  `Implement graduated context enrichment pipeline:
+- Stage 1: Validate required fields (customer_id, tier, priority)
+- Stage 2: Transform optional fields to target schema version
+- Stage 3: Compute Context Integrity Hash (SHA-256)
+- Stage 4: Verify hash matches on receiving agent side`,
+];
+
 export default function PipelineHardening() {
   const [hardenedInstruction, setHardenedInstruction] = useState(DEFAULT_HARDENED);
   const [running, setRunning] = useState(false);
@@ -120,11 +140,25 @@ export default function PipelineHardening() {
   const [showHistory, setShowHistory] = useState(false);
   const [diffFrom, setDiffFrom] = useState<string | null>(null);
   const [diffTo, setDiffTo] = useState<string | null>(null);
+  const [aiSuggesting, setAiSuggesting] = useState(false);
 
   const runReSimulation = useCallback(() => {
     setRunning(true);
     setProgress(0);
     setResult(null);
+  }, []);
+
+  const handleAiSuggest = useCallback(() => {
+    setAiSuggesting(true);
+    setTimeout(() => {
+      const suggestion = AI_SUGGESTIONS[Math.floor(Math.random() * AI_SUGGESTIONS.length)];
+      setHardenedInstruction(suggestion);
+      setAiSuggesting(false);
+      toast.success("AI analysis complete", {
+        description: "Hardened instruction generated from failure trajectory analysis",
+        duration: 4000,
+      });
+    }, 2200);
   }, []);
 
   useEffect(() => {
