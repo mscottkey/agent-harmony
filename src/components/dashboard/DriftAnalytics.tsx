@@ -42,7 +42,7 @@ export default function DriftAnalytics({ simulationPeak }: DriftAnalyticsProps) 
   const maxVariance = Math.max(...data.map((d) => d.variance)).toFixed(1);
 
   return (
-    <Card className="col-span-2">
+    <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold">Stochastic Variance · Golden Path Deviation</CardTitle>
