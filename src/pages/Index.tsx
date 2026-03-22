@@ -130,31 +130,49 @@ export default function Index() {
             </div>
 
             <div className="lg:col-span-2 lg:row-span-2">
-              <AgentDecisionGraph
-                autoRollbackEnabled={autoRollback}
-                semanticGateEnabled={semanticGate}
-                onEscalationClick={() => setRcaModalOpen(true)}
-                intentLayerVisible={intentLayerVisible}
-                missionPoliciesActive={missionPoliciesActive}
-                killSwitchEnabled={killSwitchEnabled}
-                killThreshold={killThreshold}
-              />
+              <ExpandableCard title="Agent Decision Graph">
+                <AgentDecisionGraph
+                  autoRollbackEnabled={autoRollback}
+                  semanticGateEnabled={semanticGate}
+                  onEscalationClick={() => setRcaModalOpen(true)}
+                  intentLayerVisible={intentLayerVisible}
+                  missionPoliciesActive={missionPoliciesActive}
+                  killSwitchEnabled={killSwitchEnabled}
+                  killThreshold={killThreshold}
+                />
+              </ExpandableCard>
             </div>
-            <DriftSimulator onSimulationComplete={handleSimulationComplete} />
-            <PredictiveDrift canaryActive={canaryActive} />
-            <DriftAnalytics simulationPeak={simulationPeak} canaryActive={canaryActive} />
-            <AgentStabilityIndex canaryActive={canaryActive} />
+            <ExpandableCard title="Drift Simulator">
+              <DriftSimulator onSimulationComplete={handleSimulationComplete} />
+            </ExpandableCard>
+            <ExpandableCard title="Predictive Drift">
+              <PredictiveDrift canaryActive={canaryActive} />
+            </ExpandableCard>
+            <ExpandableCard title="Drift Analytics">
+              <DriftAnalytics simulationPeak={simulationPeak} canaryActive={canaryActive} />
+            </ExpandableCard>
+            <ExpandableCard title="Agent Stability Index">
+              <AgentStabilityIndex canaryActive={canaryActive} />
+            </ExpandableCard>
 
             <div className="lg:col-span-2">
-              <MCPHub onCanaryChange={setCanaryActive} />
+              <ExpandableCard title="MCP Hub">
+                <MCPHub onCanaryChange={setCanaryActive} />
+              </ExpandableCard>
             </div>
-            <OrchestrationROI intentLockActive={intentLock} />
+            <ExpandableCard title="Orchestration ROI">
+              <OrchestrationROI intentLockActive={intentLock} />
+            </ExpandableCard>
 
             <div className="lg:col-span-3">
-              <EvaluatorPanel />
+              <ExpandableCard title="Transaction Evaluator">
+                <EvaluatorPanel />
+              </ExpandableCard>
             </div>
             <div className="lg:col-span-3">
-              <DriftTimeline />
+              <ExpandableCard title="Drift Timeline">
+                <DriftTimeline />
+              </ExpandableCard>
             </div>
             <div className="lg:col-span-3">
               <SafetyGuardrails
