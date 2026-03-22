@@ -21,15 +21,18 @@ import type { SimResult } from "@/components/dashboard/DriftSimulator";
 type ViewMode = "monitoring" | "hardening" | "vault";
 
 export default function Index() {
+  const navigate = useNavigate();
   const [simResult, setSimResult] = useState<SimResult | null>(null);
   const [simulationPeak, setSimulationPeak] = useState<number | null>(null);
   const [autoRollback, setAutoRollback] = useState(true);
   const [semanticGate, setSemanticGate] = useState(false);
   const [piiRedaction, setPiiRedaction] = useState(false);
+  const [intentLock, setIntentLock] = useState(false);
   const [rcaModalOpen, setRcaModalOpen] = useState(false);
   const [driftAlert, setDriftAlert] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("monitoring");
   const [canaryActive, setCanaryActive] = useState(false);
+  const [intentLayerVisible, setIntentLayerVisible] = useState(false);
 
   const handleSimulationComplete = useCallback((result: SimResult) => {
     setSimResult(result);
