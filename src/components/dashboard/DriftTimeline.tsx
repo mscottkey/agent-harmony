@@ -1,9 +1,19 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 type Severity = "critical" | "warning" | "info" | "resolved";
+
+interface Annotation {
+  id: string;
+  author: string;
+  avatar: string;
+  text: string;
+  timestamp: Date;
+}
 
 interface DriftEvent {
   id: string;
@@ -19,10 +29,16 @@ interface DriftEvent {
 const AGENTS = ["All Agents", "Salesforce", "Zendesk", "ChurnZero", "MCP Bridge"] as const;
 const SEVERITIES = ["All Severities", "critical", "warning", "info", "resolved"] as const;
 
+const TEAM_MEMBERS = [
+  { name: "Sarah Chen", avatar: "SC" },
+  { name: "Alex Rivera", avatar: "AR" },
+  { name: "Jordan Lee", avatar: "JL" },
+  { name: "Priya Patel", avatar: "PP" },
+];
+
 function generateEvents(): DriftEvent[] {
   const now = Date.now();
-  const agents = ["Salesforce", "Zendesk", "ChurnZero", "MCP Bridge"];
-  const events: DriftEvent[] = [
+  return [
     { id: "evt-1", timestamp: new Date(now - 2 * 60000), agent: "ChurnZero", severity: "critical", title: "Schema Mismatch — A2A-MCP-v2.0 → v1.0", description: "Field 'sentiment' not recognized in target schema. Escalation payload dropped.", traceId: "TRC-8A4F2B", driftScore: 12 },
     { id: "evt-2", timestamp: new Date(now - 8 * 60000), agent: "MCP Bridge", severity: "warning", title: "Latency Spike — Handoff Timeout", description: "MCP bridge response exceeded 500ms threshold during Salesforce → Zendesk routing.", traceId: "TRC-3C7E91", driftScore: 38 },
     { id: "evt-3", timestamp: new Date(now - 15 * 60000), agent: "Salesforce", severity: "critical", title: "Intent Misclassification", description: "Customer intent 'cancel_subscription' misrouted as 'billing_inquiry'. Churn risk elevated.", traceId: "TRC-5D1A4F", driftScore: 8 },
@@ -34,14 +50,13 @@ function generateEvents(): DriftEvent[] {
     { id: "evt-9", timestamp: new Date(now - 120 * 60000), agent: "Salesforce", severity: "info", title: "Golden Path Deviation Minor", description: "Agent took alternate routing path but achieved correct outcome. Variance within tolerance.", traceId: "TRC-6A3C8D", driftScore: 65 },
     { id: "evt-10", timestamp: new Date(now - 180 * 60000), agent: "ChurnZero", severity: "warning", title: "Payload Size Exceeds Limit", description: "Customer context payload 4.2MB exceeds 2MB soft limit. Truncation applied.", traceId: "TRC-8F1E4A", driftScore: 42 },
   ];
-  return events;
 }
 
-const severityConfig: Record<Severity, { color: string; bg: string; border: string; icon: string }> = {
-  critical: { color: "text-drift-critical", bg: "bg-drift-critical/10", border: "border-drift-critical/30", icon: "🔴" },
-  warning: { color: "text-drift-warning", bg: "bg-drift-warning/10", border: "border-drift-warning/30", icon: "🟡" },
-  info: { color: "text-drift-info", bg: "bg-drift-info/10", border: "border-drift-info/30", icon: "🔵" },
-  resolved: { color: "text-drift-success", bg: "bg-drift-success/10", border: "border-drift-success/30", icon: "✅" },
+const severityConfig: Record<Severity, { color: string; bg: string; border: string }> = {
+  critical: { color: "text-drift-critical", bg: "bg-drift-critical/10", border: "border-drift-critical/30" },
+  warning: { color: "text-drift-warning", bg: "bg-drift-warning/10", border: "border-drift-warning/30" },
+  info: { color: "text-drift-info", bg: "bg-drift-info/10", border: "border-drift-info/30" },
+  resolved: { color: "text-drift-success", bg: "bg-drift-success/10", border: "border-drift-success/30" },
 };
 
 function timeAgo(date: Date): string {
@@ -53,9 +68,23 @@ function timeAgo(date: Date): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+const SEED_ANNOTATIONS: Record<string, Annotation[]> = {
+  "evt-1": [
+    { id: "ann-1", author: "Sarah Chen", avatar: "SC", text: "This is the same schema mismatch we saw last sprint. Root cause is the v2.0 migration — ChurnZero hasn't updated their adapter.", timestamp: new Date(Date.now() - 90000) },
+    { id: "ann-2", author: "Alex Rivera", avatar: "AR", text: "Confirmed. I've flagged this in the hardening pipeline. We should add a pre-flight schema check.", timestamp: new Date(Date.now() - 60000) },
+  ],
+  "evt-3": [
+    { id: "ann-3", author: "Priya Patel", avatar: "PP", text: "Intent classifier accuracy dropped after the last fine-tune. Reverting to checkpoint 47 fixed it in staging.", timestamp: new Date(Date.now() - 600000) },
+  ],
+};
+
 export default function DriftTimeline() {
   const [agentFilter, setAgentFilter] = useState("All Agents");
   const [severityFilter, setSeverityFilter] = useState("All Severities");
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+  const [annotations, setAnnotations] = useState<Record<string, Annotation[]>>(SEED_ANNOTATIONS);
+  const [draftText, setDraftText] = useState("");
+  const [currentUser] = useState(TEAM_MEMBERS[0]);
   const events = useMemo(generateEvents, []);
 
   const filtered = useMemo(() =>
@@ -70,16 +99,35 @@ export default function DriftTimeline() {
     resolved: events.filter(e => e.severity === "resolved").length,
   }), [events]);
 
+  const totalAnnotations = Object.values(annotations).reduce((sum, arr) => sum + arr.length, 0);
+
+  const handleAddAnnotation = (eventId: string) => {
+    if (!draftText.trim()) return;
+    const newAnnotation: Annotation = {
+      id: `ann-${Date.now()}`,
+      author: currentUser.name,
+      avatar: currentUser.avatar,
+      text: draftText.trim(),
+      timestamp: new Date(),
+    };
+    setAnnotations(prev => ({
+      ...prev,
+      [eventId]: [...(prev[eventId] || []), newAnnotation],
+    }));
+    setDraftText("");
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3 px-4 pt-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <CardTitle className="text-sm font-semibold">Drift Event Timeline</CardTitle>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <Badge variant="outline" className="text-[9px] bg-drift-critical/10 text-drift-critical border-drift-critical/30">{counts.critical} Critical</Badge>
               <Badge variant="outline" className="text-[9px] bg-drift-warning/10 text-drift-warning border-drift-warning/30">{counts.warning} Warning</Badge>
               <Badge variant="outline" className="text-[9px] bg-drift-success/10 text-drift-success border-drift-success/30">{counts.resolved} Resolved</Badge>
+              <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/30">💬 {totalAnnotations} Notes</Badge>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -104,7 +152,6 @@ export default function DriftTimeline() {
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <div className="relative space-y-0">
-          {/* Timeline line */}
           <div className="absolute left-[11px] top-2 bottom-2 w-px bg-border" />
 
           {filtered.length === 0 ? (
@@ -112,9 +159,11 @@ export default function DriftTimeline() {
           ) : (
             filtered.map((event, i) => {
               const cfg = severityConfig[event.severity];
+              const eventAnnotations = annotations[event.id] || [];
+              const isExpanded = expandedEvent === event.id;
+
               return (
                 <div key={event.id} className="relative pl-8 pb-4 last:pb-0 group animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
-                  {/* Timeline dot */}
                   <div className={`absolute left-1.5 top-1.5 w-3.5 h-3.5 rounded-full border-2 ${cfg.border} ${cfg.bg} z-10 group-hover:scale-125 transition-transform`}>
                     <div className={`absolute inset-1 rounded-full ${event.severity === "critical" ? "bg-drift-critical animate-pulse" : event.severity === "warning" ? "bg-drift-warning" : event.severity === "resolved" ? "bg-drift-success" : "bg-drift-info"}`} />
                   </div>
@@ -130,11 +179,74 @@ export default function DriftTimeline() {
                       <span className="text-[9px] text-muted-foreground whitespace-nowrap">{timeAgo(event.timestamp)}</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">{event.description}</p>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-[9px] font-mono text-muted-foreground">Agent: <span className="text-foreground/80">{event.agent}</span></span>
-                      <span className="text-[9px] font-mono text-muted-foreground">Trace: <span className="text-primary">{event.traceId}</span></span>
-                      <span className="text-[9px] font-mono text-muted-foreground">Drift Score: <span className={event.driftScore < 30 ? "text-drift-critical" : event.driftScore < 60 ? "text-drift-warning" : "text-drift-success"}>{event.driftScore}/100</span></span>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-[9px] font-mono text-muted-foreground">Agent: <span className="text-foreground/80">{event.agent}</span></span>
+                        <span className="text-[9px] font-mono text-muted-foreground">Trace: <span className="text-primary">{event.traceId}</span></span>
+                        <span className="text-[9px] font-mono text-muted-foreground">Drift Score: <span className={event.driftScore < 30 ? "text-drift-critical" : event.driftScore < 60 ? "text-drift-warning" : "text-drift-success"}>{event.driftScore}/100</span></span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[9px] text-muted-foreground hover:text-foreground gap-1"
+                        onClick={() => {
+                          setExpandedEvent(isExpanded ? null : event.id);
+                          setDraftText("");
+                        }}
+                      >
+                        💬 {eventAnnotations.length > 0 ? eventAnnotations.length : ""}
+                        <span>{isExpanded ? "Hide" : "Annotate"}</span>
+                      </Button>
                     </div>
+
+                    {isExpanded && (
+                      <div className="mt-3 pt-3 border-t border-border/50 space-y-2 animate-fade-in">
+                        {eventAnnotations.map((ann) => (
+                          <div key={ann.id} className="flex gap-2">
+                            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary shrink-0 mt-0.5">
+                              {ann.avatar}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-[10px] font-semibold text-foreground">{ann.author}</span>
+                                <span className="text-[9px] text-muted-foreground">{timeAgo(ann.timestamp)}</span>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">{ann.text}</p>
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="flex gap-2 pt-1">
+                          <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary shrink-0 mt-1">
+                            {currentUser.avatar}
+                          </div>
+                          <div className="flex-1 space-y-1.5">
+                            <Textarea
+                              value={draftText}
+                              onChange={(e) => setDraftText(e.target.value)}
+                              placeholder="Add a note for your team..."
+                              className="min-h-[60px] text-[10px] bg-background/50 border-border/50 resize-none"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                                  handleAddAnnotation(event.id);
+                                }
+                              }}
+                            />
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9px] text-muted-foreground">⌘+Enter to submit</span>
+                              <Button
+                                size="sm"
+                                className="h-6 px-3 text-[9px]"
+                                disabled={!draftText.trim()}
+                                onClick={() => handleAddAnnotation(event.id)}
+                              >
+                                Post Note
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
