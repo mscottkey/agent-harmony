@@ -33,6 +33,7 @@ interface SafetyGuardrailsProps {
   onRollbackChange?: (enabled: boolean) => void;
   onSemanticGateChange?: (enabled: boolean) => void;
   onPiiRedactionChange?: (enabled: boolean) => void;
+  onIntentLockChange?: (enabled: boolean) => void;
 }
 
 export default function SafetyGuardrails({ onRollbackChange, onSemanticGateChange, onPiiRedactionChange }: SafetyGuardrailsProps) {
