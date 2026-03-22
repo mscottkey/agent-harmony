@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingDown, Clock, Zap } from "lucide-react";
+import { TrendingDown, Clock, Zap, ShieldAlert } from "lucide-react";
 
 const SPARKLINE_DATA = [82, 76, 71, 68, 59, 54, 48, 42, 38, 35, 31, 28];
+
+interface OrchestrationROIProps {
+  intentLockActive?: boolean;
+}
 
 export default function OrchestrationROI() {
   const [animatedMTTR, setAnimatedMTTR] = useState(0);
