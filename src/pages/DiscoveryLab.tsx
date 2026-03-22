@@ -286,20 +286,7 @@ export default function DiscoveryLab() {
       </main>
 
       {/* Compliance Footer */}
-      <footer className="border-t border-border bg-muted/20 px-4 sm:px-6 py-3">
-        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-drift-success" />
-              <span className="text-[10px] font-semibold text-drift-success">Compliance Certified</span>
-            </div>
-            <span className="text-[9px] text-muted-foreground">·</span>
-            <span className="text-[9px] font-mono text-muted-foreground">NIST AI 800-4</span>
-            <span className="text-[9px] text-muted-foreground">·</span>
-            <span className="text-[9px] font-mono text-muted-foreground">EU AI Act Ready</span>
-          </div>
-        </div>
-      </footer>
+      <footer>... existing footer removed</footer>
     </div>
   );
 }
