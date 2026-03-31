@@ -147,6 +147,7 @@ export default function Index() {
                   missionPoliciesActive={missionPoliciesActive}
                   killSwitchEnabled={killSwitchEnabled}
                   killThreshold={killThreshold}
+                  soundEnabled={soundEnabled}
                 />
               </ExpandableCard>
             </div>
