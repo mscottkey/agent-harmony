@@ -47,7 +47,7 @@ function sendDesktopNotification(title: string, body: string) {
   }
 }
 
-export function useDriftNotifications() {
+export function useDriftNotifications(soundEnabled = false) {
   const lastAlertTime = useRef(0);
   const COOLDOWN_MS = 5000;
 
@@ -56,9 +56,11 @@ export function useDriftNotifications() {
     if (now - lastAlertTime.current < COOLDOWN_MS) return;
     lastAlertTime.current = now;
 
-    playAlertSound();
+    if (soundEnabled) {
+      playAlertSound();
+    }
     sendDesktopNotification("🚨 Critical Drift Detected", message);
-  }, []);
+  }, [soundEnabled]);
 
   return { alertCriticalDrift };
 }
