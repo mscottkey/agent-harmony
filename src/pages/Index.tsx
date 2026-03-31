@@ -18,7 +18,7 @@ import ExpandableCard from "@/components/dashboard/ExpandableCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Shield, CheckCircle } from "lucide-react";
+import { Shield, CheckCircle, Volume2, VolumeX } from "lucide-react";
 import type { SimResult } from "@/components/dashboard/DriftSimulator";
 
 type ViewMode = "monitoring" | "hardening" | "vault" | "intent-studio" | "discovery";
