@@ -18,7 +18,7 @@ import ExpandableCard from "@/components/dashboard/ExpandableCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Shield, CheckCircle } from "lucide-react";
+import { Shield, CheckCircle, Volume2, VolumeX } from "lucide-react";
 import type { SimResult } from "@/components/dashboard/DriftSimulator";
 
 type ViewMode = "monitoring" | "hardening" | "vault" | "intent-studio" | "discovery";
@@ -38,6 +38,7 @@ export default function Index() {
   const [canaryActive, setCanaryActive] = useState(false);
   const [intentLayerVisible, setIntentLayerVisible] = useState(false);
   const [missionPoliciesActive, setMissionPoliciesActive] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
 
   const handleSimulationComplete = useCallback((result: SimResult) => {
     setSimResult(result);
@@ -81,6 +82,13 @@ export default function Index() {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+              title={soundEnabled ? "Mute alert sounds" : "Enable alert sounds"}
+            >
+              {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            </button>
             <Badge variant="outline" className="text-[10px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 hidden sm:inline-flex">2 Drift Events</Badge>
             {driftAlert ? (
               <Badge variant="outline" className="text-[10px] bg-drift-warning/10 text-drift-warning border-drift-warning/30 animate-pulse">⚠ Drift Alert</Badge>
@@ -139,6 +147,7 @@ export default function Index() {
                   missionPoliciesActive={missionPoliciesActive}
                   killSwitchEnabled={killSwitchEnabled}
                   killThreshold={killThreshold}
+                  soundEnabled={soundEnabled}
                 />
               </ExpandableCard>
             </div>
