@@ -38,6 +38,7 @@ export default function Index() {
   const [canaryActive, setCanaryActive] = useState(false);
   const [intentLayerVisible, setIntentLayerVisible] = useState(false);
   const [missionPoliciesActive, setMissionPoliciesActive] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
 
   const handleSimulationComplete = useCallback((result: SimResult) => {
     setSimResult(result);
