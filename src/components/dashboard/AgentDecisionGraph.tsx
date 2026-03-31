@@ -139,6 +139,7 @@ interface AgentDecisionGraphProps {
   missionPoliciesActive?: boolean;
   killSwitchEnabled?: boolean;
   killThreshold?: number;
+  soundEnabled?: boolean;
 }
 
 const PENDING_PAYLOAD = `{
@@ -162,8 +163,9 @@ export default function AgentDecisionGraph({
   missionPoliciesActive = false,
   killSwitchEnabled = false,
   killThreshold = 25,
+  soundEnabled = false,
 }: AgentDecisionGraphProps) {
-  const { alertCriticalDrift } = useDriftNotifications();
+  const { alertCriticalDrift } = useDriftNotifications(soundEnabled);
   const [topology, setTopology] = useState<Topology>("supervisor");
   const [killTriggered, setKillTriggered] = useState(false);
 
